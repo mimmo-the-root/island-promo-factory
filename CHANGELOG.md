@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.3 — Simpler new-map start with Claude
+
+- `/island-new` asks only for the island code and the title; it checks for a newer release first, creates the map and opens the live console right away.
+- Claude tells you the exact folder for each file (background, character, gameplay, music) and waits; `intake.py` prints those folders when it creates a map.
+- Title style and the character description are decided by Claude from your images (no questions); you are told the choice in one line.
+
 ## v1.1.2 — Batch windows close by themselves, live console stays available, stage area with rollback
 
 - Every `.bat` now ends on its own after a 10 s countdown; it only waits for a key when something failed (the error stays readable). `demo.bat` and `run_all.bat` no longer hang until Ctrl+C.

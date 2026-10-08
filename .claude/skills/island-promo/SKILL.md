@@ -15,11 +15,9 @@ Chat with the user in their language; code and comments in English. Iterate one 
 poll `last_run_all.log` every 20-30 s, telling the user briefly what stage it is in; do not block silently.
 
 ## Order (do not skip, do not reorder)
-0. **Version**: the session hook already told you if a newer release exists. If it did, offer `/island-update` first (one question), then continue.
-1. **Step 0 - intake**: load `island-intake`. Ask for island code, title and input assets, create or reuse the map, run `PY intake.py --project <slug>` until READY. Nothing else starts before that.
-2. **Start the helpers (as soon as intake is READY)**:
-   - Live console: `PY services.py console --project <slug>` - opens the results page in the user's browser; tell the user it stays open and updates live.
-   - ComfyUI (only if the run uses AI art): `PY services.py comfy` - opens its own window and waits until it answers. If it cannot start, say why and offer `--no-qwen`.
+0. **Version**: run `PY update.py --check` FIRST (do not rely on the start-up hook, its message may not be visible) and tell the user the result in one line. If a newer release exists, offer `/island-update` (one question), then continue.
+1. **Step 0 - intake**: load `island-intake`. Ask only for island code and title, create the map, **open the live console immediately** (`PY services.py console --project <slug>`; tell the user it stays open and updates live), say where each input file goes, wait for the files, decide style and character description from the images, run `PY intake.py --project <slug>` until READY. Nothing else starts before that.
+2. **ComfyUI** (only if the run uses AI art, after READY): `PY services.py comfy` - opens its own window and waits until it answers. If it cannot start, say why and offer `--no-qwen`.
 3. **Images**: load `island-images`.
 4. **Video**: load `island-video`.
 5. **Review**: load `island-review` (look at every output, write `RUN_REPORT.md`, hand over the pack and the upload checklist).

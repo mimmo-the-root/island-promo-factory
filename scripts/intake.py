@@ -173,6 +173,13 @@ def main():
         if changed:
             cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
 
+    if created and not a.json:
+        print("Map folder: %s" % proj)
+        for sub, what in (("background", "the environment (no characters, >= 1920 px wide)"), ("characters", "ONE character, transparent PNG"),
+                          ("captures/gameplay", "the gameplay recording (mp4, 5+ min, 1080p)"), ("audio", "optional music.mp3")):
+            (proj / sub).mkdir(parents=True, exist_ok=True)
+            print("  put here: %s  <- %s" % (proj / sub, what))
+        print()
     import os
     os.environ["PROMO_PROJECT"] = slug
     check_config(proj, cfg)
