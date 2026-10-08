@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.4 — /island-new asks again: continue a map or start a new one
+
+- The first question of `/island-new` is again "continue one of your existing maps, or start a new one?", with the list of existing maps; it was lost in v1.1.3.
+
 ## v1.1.3 — Simpler new-map start with Claude
 
 - `/island-new` asks only for the island code and the title; it checks for a newer release first, creates the map and opens the live console right away.

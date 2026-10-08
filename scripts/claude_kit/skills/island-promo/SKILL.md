@@ -16,7 +16,7 @@ poll `last_run_all.log` every 20-30 s, telling the user briefly what stage it is
 
 ## Order (do not skip, do not reorder)
 0. **Version**: run `PY update.py --check` FIRST (do not rely on the start-up hook, its message may not be visible) and tell the user the result in one line. If a newer release exists, offer `/island-update` (one question), then continue.
-1. **Step 0 - intake**: load `island-intake`. Ask only for island code and title, create the map, **open the live console immediately** (`PY services.py console --project <slug>`; tell the user it stays open and updates live), say where each input file goes, wait for the files, decide style and character description from the images, run `PY intake.py --project <slug>` until READY. Nothing else starts before that.
+1. **Step 0 - intake**: load `island-intake`. FIRST list the existing maps (`PY intake.py`) and ask in plain text, as the very first question: continue one of these maps, or start a new one? (Do not use a question widget for this; a normal message is enough.) For an existing map skip to the checks and ask what the user wants to redo. For a new map ask only for island code and title, create the map, **open the live console immediately** (`PY services.py console --project <slug>`; tell the user it stays open and updates live), say where each input file goes, wait for the files, decide style and character description from the images, run `PY intake.py --project <slug>` until READY. Nothing else starts before that.
 2. **ComfyUI** (only if the run uses AI art, after READY): `PY services.py comfy` - opens its own window and waits until it answers. If it cannot start, say why and offer `--no-qwen`.
 3. **Images**: load `island-images`.
 4. **Video**: load `island-video`.
