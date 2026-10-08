@@ -1,0 +1,40 @@
+name: tests
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: pip install pillow numpy
+      - name: VERSION and CHANGELOG agree (and match the tag on a release)
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then python scripts/release.py check --tag "$GITHUB_REF_NAME"; else python scripts/release.py check; fi
+      - run: python tests/test_version.py
+      - run: python tests/smoke_test.py
+  release:
+    # A tag push only becomes a GitHub Release when the tests job passed.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release notes from CHANGELOG
+        run: python3 scripts/release.py notes "$GITHUB_REF_NAME" > notes.md
+      - name: Source zip
+        run: git archive --format=zip --prefix="island-promo-factory-$GITHUB_REF_NAME/" -o "island-promo-factory-$GITHUB_REF_NAME.zip" HEAD
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "island-promo-factory-$GITHUB_REF_NAME.zip" --title "$GITHUB_REF_NAME" --notes-file notes.md

@@ -1,0 +1,23 @@
+Create a premium Fortnite-style promotional artwork in a NATIVE VERTICAL 3:4 portrait composition.
+
+IMAGE 1 is the existing environment: keep it as the scene (same place, style, lighting, colors).
+IMAGE 2 is the character: place EXACTLY ONE character in the scene. Do not add any other character, creature or person.
+
+CHARACTER:
+- Show the character from the head down to the feet, FULL BODY, smaller than a close-up: the character occupies only the UPPER HALF of the frame.
+- Place the character CENTERED horizontally. The top of the head at about 15% of the image height and the FEET at about 55% of the image height. The character's total height is only about 40% of the image height. Do NOT make the character large.
+- The entire LOWER 45% of the image (below the feet) is empty ground and environment: no character parts, no creature, no weapon, no important details, because the game title will be placed there later.
+- Leave open space around the character, with the environment visible on both sides.
+- Keep the original pose and equipment from the reference; only a subtle adjustment to feel natural in the scene.
+- Preserve exactly: helmet or head, armor, outfit, colors, materials, accessories, proportions, identity.
+- If the character wears a helmet, keep the helmet. Never show a face and never add hair.
+
+ENVIRONMENT:
+- Keep the provided environment. Do not redesign it.
+- Do not add any new beams, lightsabers, energy effects or lens flares.
+- Match perspective, scale, lighting, shadows, color temperature and depth so the character looks present in the scene.
+
+Strong depth, strong contrast, readable silhouette at small thumbnail size, cinematic AAA promotional look.
+
+DO NOT ADD: text, letters, logos, UI, watermarks, extra characters, extra objects, extra weapons, particles.
+Family-friendly and non-graphic.

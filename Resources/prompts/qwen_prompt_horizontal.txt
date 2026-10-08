@@ -1,0 +1,22 @@
+Create a premium Fortnite-style promotional artwork in a NATIVE HORIZONTAL 16:9 composition.
+
+IMAGE 1 is the existing environment: keep it as the scene (same place, style, lighting, colors and every landmark of the environment).
+IMAGE 2 is the character: place EXACTLY ONE character in the scene. Do not add any other character, creature or person.
+
+CHARACTER:
+- Show the FULL body, head to boots, nothing cropped, feet clearly visible above the bottom edge.
+- Place the character FAR LEFT: the center of the character is at about 20% of the image width and the whole body lies within the left 35% of the image. The area from 40% to 100% of the width contains NO character.
+- The character stands on the ground of the scene.
+- The character height is about 70% of the image height (large but never touching the top or bottom edge).
+- Keep the original pose and equipment from the reference; only a subtle adjustment to feel natural in the scene. Slightly turned toward the center.
+- Preserve exactly: helmet, armor, outfit, colors, materials, accessories, proportions, identity.
+- If the character wears a helmet, keep the helmet. Never show a face and never add hair.
+
+COMPOSITION:
+- Keep the RIGHT TWO THIRDS of the image free of any character: only environment (landmarks, smoke, fire, sky). A title will be added there later.
+- Do not let any starship or large object overlap the character.
+- Match perspective, scale, lighting, shadows, color temperature and depth so the character looks present in the scene.
+- Strong depth, strong contrast, readable silhouette at small thumbnail size, cinematic AAA promotional look.
+
+DO NOT ADD: text, letters, logos, UI, watermarks, extra characters, extra objects, extra weapons, particles, new light beams, lightsabers, energy effects or lens flares.
+Family-friendly and non-graphic.

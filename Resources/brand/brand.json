@@ -1,0 +1,71 @@
+{
+  "project": {
+    "name": "Island Promo Factory",
+    "version": "0.1"
+  },
+
+  "thumbnail": {
+    "width": 1920,
+    "height": 1080
+  },
+
+  "typography": {
+    "font": "font/Burbank Big Condensed Black.otf",
+
+    "styles": {
+      "WHITE": {
+        "gradient_top": [255, 255, 255],
+        "gradient_bottom": [255, 255, 255],
+        "outline": [0, 0, 0],
+        "shadow": [0, 0, 0]
+      },
+
+      "SCI_FI": {
+        "gradient_top": [255, 255, 255],
+        "gradient_bottom": [80, 180, 255],
+        "outline": [0, 0, 0],
+        "shadow": [0, 0, 0]
+      },
+
+      "FIRE": {
+        "gradient_top": [255, 255, 240],
+        "gradient_bottom": [255, 70, 0],
+        "outline": [40, 0, 0],
+        "shadow": [0, 0, 0]
+      },
+
+      "ICE": {
+        "gradient_top": [255, 255, 255],
+        "gradient_bottom": [70, 190, 255],
+        "outline": [0, 30, 60],
+        "shadow": [0, 0, 0]
+      },
+
+      "NEON": {
+        "gradient_top": [255, 255, 255],
+        "gradient_bottom": [210, 50, 255],
+        "outline": [20, 0, 40],
+        "shadow": [0, 0, 0]
+      },
+
+      "GOLD": {
+        "gradient_top": [255, 255, 220],
+        "gradient_bottom": [230, 150, 20],
+        "outline": [50, 25, 0],
+        "shadow": [0, 0, 0]
+      },
+
+      "HORROR": {
+        "gradient_top": [255, 255, 255],
+        "gradient_bottom": [180, 20, 20],
+        "outline": [20, 0, 0],
+        "shadow": [0, 0, 0]
+      }
+    }
+  },
+
+  "assets": {
+    "pegi": "pegi/age-12-black.jpg",
+    "uefn": "uefn/FNDV_V_Black_EN.png"
+  }
+}

@@ -1,0 +1,20 @@
+This image already contains the final composition: an environment with ONE character placed in it. Harmonize it so the character looks naturally present in the scene.
+
+DO NOT change the composition:
+- Keep the character at EXACTLY the same position and the SAME size. Do not enlarge, move, crop, rotate or re-pose the character.
+- Keep the environment, camera angle and framing exactly as they are.
+- Keep exactly ONE character. Do not add any other character, creature or person. The small companion attached to the character stays with it.
+
+ONLY improve integration, with minimal changes:
+- Do NOT recolor or color-grade the image. The environment keeps EXACTLY its original colors: the grey metallic Death Star stays grey, the dark smoke stays dark grey, the fire stays orange. No sepia, no brown or warm tint over the whole image.
+- Change only a thin area around the character: subtle rim light from the firelight on the character's edges, a natural contact shadow directly under the feet, and a little smoke or dust at the feet.
+- Remove any bright outline, white edge or cut-out halo around the character; blend the edges softly into the scene.
+- Do not add long shadows across the floor.
+- Preserve exactly the character's helmet, armor, outfit, colors, materials, accessories and identity, including the small creature in its pod. Never show a face and never add hair.
+
+Do not add any new beams, lightsabers, energy effects or lens flares.
+Strong depth, readable silhouette at small thumbnail size, cinematic AAA promotional look.
+The lower part of the image stays plain ground with no new objects.
+
+DO NOT ADD: text, letters, logos, UI, watermarks, extra characters, extra objects, extra weapons.
+Family-friendly and non-graphic.
