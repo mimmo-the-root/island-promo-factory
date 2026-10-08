@@ -11,6 +11,7 @@ Language: answer the user in their language; code and comments in English. Itera
 - `Projects/<map>/` — `input`, `background`, `characters`, `final`, `title`, `promo_pack`, `config.json`.
 
 ## Per map
+Use the skills in `.claude/skills/` (source: `scripts/claude_kit/`, synced by `scripts/claude_sync.py`; edit the kit copy, never only `.claude/`). `island-promo` orchestrates; step 0 is `island-intake` / `scripts/intake.py`; `scripts/services.py` starts ComfyUI and the console; run scripts with `scripts/py.ps1`. Manual flow:
 1. `new_map.bat <slug> "TITLE"`; the user adds `background/background.png` and `characters/character_01.png` (transparent, with margin).
 2. `run_factory.bat <slug>` (needs ComfyUI) or `python scripts/factory.py --project <slug> --no-qwen`.
 3. `run_vertical.bat <slug>`; `run_trailer.bat <slug>`.
@@ -22,7 +23,7 @@ Language: answer the user in their language; code and comments in English. Itera
 - Never delete user files: move to `final/_previous/` or a `_to_delete_*` folder.
 - Every stage must exit 0 AND create/update its output; scripts exit 1 with a clear message otherwise.
 - Embedded Python ignores the script dir: scripts insert their own dir in `sys.path` first.
-- Gameplay video is real and unedited: validate only (`video_validate.py --kind gameplay`).
+- Gameplay video: default look is cinematic (edited montage, generated music, 4+ real moments); `--gameplay-look off` gives the unedited cut. Always validate (`video_validate.py --kind gameplay`).
 - PEGI and "Developed in Fortnite" are video-only. Do not redistribute fonts/badges/franchise art you cannot license.
 - Debug output behind `PROMO_DEBUG=1`. Run `python tests/smoke_test.py` after changes.
 

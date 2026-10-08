@@ -32,6 +32,8 @@ _backup_*/
 .update_cache.json
 _update_backup/
 last_run_all.log
+last_console.log
+.claude/settings.local.json
 
 # third-party ComfyUI install that lives inside this folder (never publish it)
 ComfyUI_windows_portable/

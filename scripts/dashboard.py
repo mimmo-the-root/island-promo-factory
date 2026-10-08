@@ -269,7 +269,7 @@ def make_handler(proj):
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
             for k, v in (extra or {}).items():
-                self.send_header(k, v)
+                self.send_header(k, "".join(ch for ch in str(v) if ch.isprintable() and ch not in "\r\n"))
             self.end_headers()
             self.wfile.write(body)
 
@@ -299,12 +299,9 @@ def make_handler(proj):
                         return self.send(200, buf.getvalue(), "application/zip",
                                          {"Content-Disposition": 'attachment; filename="%s_variant_%s.zip"' % (proj.name, n)})
                     if len(parts) == 2:
-                        f = (vdir / n / parts[1]).resolve()
-                        try:
-                            f.relative_to((vdir / n).resolve())
-                        except ValueError:
-                            f = None
-                        if f and f.is_file() and f.suffix.lower() in IMG_EXT:
+                        listing = {p.relative_to(vdir / n).as_posix(): p for p in (vdir / n).rglob("*") if p.is_file()}
+                        f = listing.get(parts[1])          # only names that really exist in the folder; request text never reaches a path
+                        if f and f.suffix.lower() in IMG_EXT:
                             return self.send(200, f.read_bytes(), "image/png")
             if path == "/api/version":
                 return self.send(200, json.dumps(V.info(check=False)).encode("utf-8"), "application/json")
@@ -355,8 +352,8 @@ def make_handler(proj):
                 return self.send(200, buf.getvalue(), "application/zip",
                                  {"Content-Disposition": 'attachment; filename="%s_promo_pack.zip"' % proj.name})
             if path.startswith("/pack/"):
-                f = pack / Path(path[6:]).name  # basename only: no path traversal
-                if f.is_file():
+                f = {p.name: p for p in pack.iterdir() if p.is_file()}.get(path[6:]) if pack.is_dir() else None  # lookup in the listing: no path traversal
+                if f is not None:
                     ct = {"png": "image/png", "mp4": "video/mp4", "md": "text/plain", "txt": "text/plain"}.get(f.suffix[1:].lower(), "application/octet-stream")
                     return self.send(200, f.read_bytes(), ct, {"Content-Disposition": 'inline; filename="%s"' % f.name})
             self.send(404, b"not found", "text/plain")

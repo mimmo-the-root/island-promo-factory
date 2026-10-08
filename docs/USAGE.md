@@ -1,5 +1,24 @@
 # Usage
 
+## Claude as orchestrator (recommended)
+Open this folder in Claude Code and type `/island-new` (or just ask for a new package). Claude starts ComfyUI and the live console by itself (`scripts/services.py`) and runs every step; you never double-click .bat files. The skills in `.claude/skills/` load by themselves:
+`island-promo` (orchestrator) -> `island-intake` (step 0) -> `island-images` -> `island-video` -> `island-review`.
+Step 0 asks for the island code, the title, the title style and a one-sentence character identity, creates or reuses the map,
+tells you which files to place (`background/background.png`, `characters/character_01.png`, a recording in `captures/gameplay/`)
+and runs `python scripts/intake.py --project <slug>` until it prints READY. Then it runs the pipeline, reviews every output and
+writes `RUN_REPORT.md`. One map at a time: the next one starts after you report the portal result.
+`intake.py` works without Claude too: `intake.py` lists maps; `intake.py --project <slug> --init --title "T" --island-code 1234-5678-9012` creates one.
+
+## Look of the videos and screenshots
+`run_all.bat <map> --gameplay-look cinematic|hype|off` (default cinematic) sets one look for the gameplay video, the trailer clips and the screenshots:
+grade, bloom, vignette; videos add grain, letterbox, push-ins, speed changes and beat-synced transitions. `off` keeps everything unedited.
+The recording's own audio is replaced by generated music (`audio/gameplay_music.wav`, reused by the trailer; your own `audio/music.mp3` wins).
+
+## Variants, prompt control, housekeeping
+- `dashboard.bat`: live console that stays open after the run; buttons generate variants B/C (new seed, A untouched). CLI: `variant.py --project <slug> --name B`.
+- `run_all.bat <map> --review-prompt`: shows and lets you edit the Qwen prompt before generation (`qwen_prompt_custom.txt`); `prompt.extra` / `prompt.avoid` in `config.json`.
+- `python scripts/cleanup.py --project <slug> [--apply]`: moves old archives (`final/_previous`, `_runs`, `captures/_previous`) to `_to_delete/`; nothing is erased.
+
 ## Per-map workflow
 1. `new_map.bat <slug> "TITLE" [--style SCI_FI]`
 2. Add `background/background.png` and `characters/character_01.png`; edit `config.json`.

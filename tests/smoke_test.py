@@ -151,6 +151,28 @@ def main():
           "variant B is generated in isolation (A untouched, temp copy removed)")
     if rc != 0:
         print(out[-2000:])
+    rc, out = run(py, ["scripts/intake.py", "--project", "newcomer", "--init", "--title", "NEW COMER", "--island-code", "1234-5678-9012"], env2, root)
+    check(rc == 1 and (pdir / "newcomer" / "config.json").exists() and "BLOCK background image missing" in out,
+          "intake creates a map and reports the missing assets")
+    rc, out = run(py, ["scripts/intake.py", "--project", "demo"], env2, root)
+    check("island code" in out and "title:" in out, "intake checks an existing map")
+    ksync = Path(tmp) / "kit_root"
+    (ksync / "scripts").mkdir(parents=True)
+    shutil.copytree(root / "scripts" / "claude_kit", ksync / "scripts" / "claude_kit")
+    (ksync / ".claude").mkdir()
+    (ksync / ".claude" / "settings.json").write_text('{"permissions": {"allow": ["Bash(ls:*)"]}}', encoding="utf-8")
+    rc, out = run(py, ["scripts/claude_sync.py", "--root", str(ksync)], env2, root)
+    st = json.loads((ksync / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    check(rc == 0 and (ksync / ".claude" / "skills" / "island-promo" / "SKILL.md").exists() and "permissions" in st
+          and "island_session_start" in json.dumps(st), "claude_sync installs skills + hook and keeps the user's own settings")
+    rc, out = run(py, ["scripts/claude_sync.py", "--root", str(ksync)], env2, root)
+    check("already up to date" in out, "claude_sync is idempotent")
+    real = Path(__file__).resolve().parent.parent          # the real repo, not the temp copy
+    same = not (real / ".claude").exists() or all((real / ".claude" / r).read_bytes() == (real / "scripts" / "claude_kit" / r).read_bytes()
+               for r in ("skills/island-promo/SKILL.md", "skills/island-intake/SKILL.md", "commands/island-new.md"))
+    check(same, ".claude/ in the repo matches scripts/claude_kit/")
+    rc, out = run(py, ["scripts/session_start.py"], dict(env2, PROMO_NO_UPDATE_CHECK="1"), root)
+    check(rc == 0 and json.loads(out.strip().splitlines()[-1])["hookSpecificOutput"]["hookEventName"] == "SessionStart", "session_start hook prints valid JSON")
     rc, out = run(py, ["scripts/doctor.py"], env2, root)
     check(rc == 0 and "READY" in out, "doctor.py reports no FAIL")
 

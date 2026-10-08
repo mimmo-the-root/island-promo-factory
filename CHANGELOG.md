@@ -3,6 +3,22 @@
 Scheme: `VERSION` file = single source of truth (`X.Y.Z`); commit `vX.Y.Z: summary`; git tag `vX.Y.Z`; the GitHub Release
 is built by CI from the tag. Entries below are newest first. `python scripts/release.py check` keeps VERSION and this file in step.
 
+## v1.1.0 — Claude as orchestrator: step 0 intake, skills, one cinematic look, colour fix
+
+- **Step 0 intake** (`scripts/intake.py`): asks for / checks island code, title, style, character identity, background, character PNG (transparency),
+  gameplay recording, ffmpeg, ComfyUI and models; creates or reuses the map (`--init`); prints READY or the exact BLOCK/WARN fixes.
+- **Skills** (`island-promo` orchestrator, `island-intake`, `island-images`, `island-video`, `island-review`) and slash commands `/island-new`, `/island-update`,
+  `/island-console`. Reference copy in `scripts/claude_kit/`, mirrored into `.claude/` by `scripts/claude_sync.py` (your own `.claude/settings.json` is kept).
+- **Claude starts everything for you:** `scripts/services.py` starts ComfyUI (own window, waits until ready) and the live console (opens the browser); `scripts/py.ps1` finds the right
+  Python, so nobody has to double-click .bat files. A SessionStart hook (`scripts/session_start.py`) syncs the kit and announces new releases (same technique as the UEFN dream bot team kit).
+- **Security (CodeQL alerts #1-#4 in `dashboard.py`):** files are served only by looking the name up in the real folder listing (no request text reaches a
+  path), header values can no longer contain line breaks. CI actions moved to `actions/checkout@v5` / `actions/setup-python@v6` (Node 24).
+- `update.py` also syncs the Claude kit after an update (or when already up to date).
+- **Colour fix:** the bloom no longer shifts chroma (it caused the purple cast); softer warm grade, bloom 0.12.
+- **Screenshots** get the same grade/bloom/vignette as the videos (full 1920x1080, no bars); the trailer's real clips get the full cinematic look.
+- **One gameplay video:** the cinematic montage is slot 07; old `09_gameplay_cinematic*` files are moved to `_to_delete_stale/` automatically.
+- `publish.bat` / `publish_skeleton.bat` (no PowerShell execution-policy problem); `cleanup.py` also covers `captures/_previous`; docs updated.
+
 ## v1.0.0 — First public release: images, video cut, trailer, music, live console
 
 - **Images** (`factory.py`): lobby and vertical backgrounds, Qwen Image Edit art through ComfyUI, optional AI upscale,

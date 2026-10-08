@@ -1,5 +1,5 @@
 import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(__file__).resolve().parent))  # embedded python ignores script dir
-"""Keep a map's work folders small: old archives pile up in final/_previous, final/_runs and background/_runs.
+"""Keep a map's work folders small: old archives pile up in final/_previous, final/_runs, background/_runs and captures/_previous.
 
 Usage: cleanup.py [--project SLUG] [--keep 3] [--apply]
 Dry run by default (lists what would go and how much space it frees). With --apply the older items are MOVED to
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import promo_project as pp
 
-ARCHIVES = ["final/_previous", "final/_runs", "background/_runs"]
+ARCHIVES = ["final/_previous", "final/_runs", "background/_runs", "captures/_previous"]
 
 
 def size(p):

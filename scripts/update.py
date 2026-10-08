@@ -87,6 +87,17 @@ def apply_zip(data, root, version_hint=""):
     return new_ver, changed, added, (backup if changed else None), z
 
 
+def _sync_claude(root):
+    """Mirror scripts/claude_kit/ into .claude/ (skills, commands, start-up hook)."""
+    try:
+        import claude_sync
+        ch = claude_sync.sync(root)
+        if ch:
+            print("Claude kit: %d change(s) - open a NEW Claude session to load them." % len(ch))
+    except Exception as e:
+        print("Claude kit sync skipped (%s)" % e)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
@@ -109,6 +120,7 @@ def main():
         print("Latest release: %s" % tag)
         if not V.is_newer(tag, cur) and not a.force:
             print("You are up to date.")
+            _sync_claude(root)
             return
         if a.check:
             print("Update available. Run update.bat (or: python scripts/update.py).")
@@ -117,6 +129,7 @@ def main():
     if (root / ".git").exists() and not a.force:
         print("This folder is a git clone: update it with `git pull` (or `git fetch --tags && git checkout %s`)." % tag)
         print("Use --force to overwrite the managed files from the release zip anyway.")
+        _sync_claude(root)
         return
     if data is None:
         print("Downloading %s ..." % tag)
@@ -128,6 +141,7 @@ def main():
     if backup:
         print("Previous versions of the replaced files: %s" % backup)
     print("Not touched: Projects/, Resources/brand/, Resources/badges/, models, logs.")
+    _sync_claude(root)
     try:
         text = (root / "CHANGELOG.md").read_text(encoding="utf-8")
         for v, title, body in V.changelog_between(text, cur, new_ver):
