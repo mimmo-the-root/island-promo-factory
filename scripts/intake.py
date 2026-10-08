@@ -179,7 +179,7 @@ def main():
                           ("captures/gameplay", "the gameplay recording (mp4, 5+ min, 1080p)"), ("audio", "optional music.mp3")):
             (proj / sub).mkdir(parents=True, exist_ok=True)
             print("  put here: %s  <- %s" % (proj / sub, what))
-        print()
+        print("(file names are examples: any name works, Claude renames the files for the kit)\n")
     import os
     os.environ["PROMO_PROJECT"] = slug
     check_config(proj, cfg)

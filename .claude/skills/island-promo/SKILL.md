@@ -14,6 +14,9 @@ Chat with the user in their language; code and comments in English. Iterate one 
 `PY intake.py --project my-map`. Run from the repo root. Long jobs (full run: about 2 minutes without Qwen, 6-8 with it): start them in the background and
 poll `last_run_all.log` every 20-30 s, telling the user briefly what stage it is in; do not block silently.
 
+## Which case?
+New map from separate images: the order below. The user ALREADY HAS a finished thumbnail and wants it made portal-conform: load `island-conform` instead.
+
 ## Order (do not skip, do not reorder)
 0. **Version**: run `PY update.py --check` FIRST (do not rely on the start-up hook, its message may not be visible) and tell the user the result in one line. If a newer release exists, offer `/island-update` (one question), then continue.
 1. **Step 0 - intake**: load `island-intake`. FIRST list the existing maps (`PY intake.py`) and ask in plain text, as the very first question: continue one of these maps, or start a new one? (Do not use a question widget for this; a normal message is enough.) For an existing map skip to the checks and ask what the user wants to redo. For a new map ask only for island code and title, create the map, **open the live console immediately** (`PY services.py console --project <slug>`; tell the user it stays open and updates live), say where each input file goes, wait for the files, decide style and character description from the images, run `PY intake.py --project <slug>` until READY. Nothing else starts before that.

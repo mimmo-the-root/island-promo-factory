@@ -197,6 +197,15 @@ def main():
     rc, out = run(py, ["scripts/update.py", "--root", str(ur), "--rollback", "1.1.0"], env2, root)
     check(rc == 0 and (ur / "VERSION").read_text().strip() == "1.1.0", "rollback to a named version (roll forward) works")
 
+    # conform: existing thumbnail -> landscape with text
+    cp = tmp / "conf_projects" / "c1"
+    (cp / "input").mkdir(parents=True)
+    (cp / "config.json").write_text("{}")
+    Image.new("RGB", (1376, 752), (30, 10, 50)).save(cp / "input" / "my old thumb.jpg")
+    (cp / "input" / "thumbnail_original.jpg").write_bytes((cp / "input" / "my old thumb.jpg").read_bytes())
+    rc, out = run(py, ["scripts/conform.py", "landscape", "--project", "c1"], dict(env, PROMO_PROJECTS_DIR=str(cp.parent)), root)
+    check(rc == 0 and Image.open(cp / "final" / "thumbnail_horizontal_title.png").size == (1920, 1080), "conform.py makes a 1920x1080 landscape from a 1376x752 thumbnail")
+
     server.shutdown()
     print("\n%d check(s) failed, %.0f s" % (len(FAILS), time.time() - t0))
     if keep:

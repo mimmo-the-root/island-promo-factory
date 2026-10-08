@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.6 — New map: drop the files now or come back later; make my thumbnail conform (step 1)
+
+- After creating a map, Claude lists the folders for the files and offers two ways on: drop them now, or leave and resume later with `/island-new` (continue an existing map).
+- **New case, step 1:** `/island-conform` (skill `island-conform`) starts from a thumbnail you already have. `scripts/conform.py landscape` makes the landscape-with-text thumbnail (1920x1080 PNG < 5 MB): 16:9 images are scaled, other ratios centre-cropped, small images upscaled with a warning. Landscape without text, portrait, logo and lobby background from an existing thumbnail follow in the next steps.
+- File names shown are examples: any name and image format works; Claude copies them to the names the kit uses. `intake.py` prints the same note.
+
 ## v1.1.5 — Security: no request data in response headers (CodeQL alert #5)
 
 - `dashboard.py`: download headers now use fixed file names (`promo_pack.zip`, `variant_B.zip`, `variant_C.zip`); inline files carry no `Content-Disposition`. Closes the HTTP response splitting alert.

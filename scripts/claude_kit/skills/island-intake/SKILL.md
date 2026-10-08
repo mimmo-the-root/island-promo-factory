@@ -19,14 +19,14 @@ Create the map right away (slug = lowercase title with dashes):
 The command prints the folders. Open the live console now (`PY services.py console --project <slug>`), so the user sees the map from the first minute.
 
 ## 3. Tell the user where each file goes (do not ask for paths)
-Show the ABSOLUTE folder paths printed by intake (the map folder is `Projects/<slug>/`, next to the kit) and say what goes in each, then wait until the user says the files are in:
+Show the ABSOLUTE folder paths printed by intake (the map folder is `Projects/<slug>/`, next to the kit) and say what goes in each. **The file names in the table are only examples: any file name works** (any image format for the images, any video name), say so in your message. Then offer two ways on, in one short sentence: drop the files now and tell you when they are in, **or** leave and come back later - the map is saved, and the next `/island-new` ("continue an existing map") resumes exactly here with the intake check. Wait for the user's answer; do not start any stage without the files:
 | What | Put it in | Rule |
 |---|---|---|
 | Environment | `background/` (any name, any image format) | island capture without characters, at least 1920 px wide |
 | ONE character | `characters/` | transparent PNG with a small margin; a render on a flat background also works (you cut it out with `PY prepare_character.py <image> --project <slug>`) |
 | Gameplay recording | `captures/gameplay/` | mp4, 5+ minutes, 1080p, game UI visible; without it gameplay, trailer clips and screenshots are skipped |
 | Own music (optional) | `audio/` as `music.mp3` | otherwise the kit generates original music |
-Copy/rename the files to the standard names yourself (`background/background.png`, `characters/character_01.png`); originals stay in `input/`.
+Whatever the user's names are, copy/rename the files to the standard names yourself (`background/background.png`, `characters/character_01.png`); originals stay in `input/`.
 
 ## 3b. Decide style and character yourself
 Look at the background and the character image (Read tool). Then:
