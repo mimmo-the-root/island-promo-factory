@@ -15,7 +15,7 @@ Chat with the user in their language; code and comments in English. Iterate one 
 poll `last_run_all.log` every 20-30 s, telling the user briefly what stage it is in; do not block silently.
 
 ## Which case?
-New map from separate images: the order below. The user ALREADY HAS a finished thumbnail and wants it made portal-conform: load `island-conform` instead.
+For a NEW map ask, right after island code and title (plain text, one question): **make new artwork** from separate images (the order below), or **make my existing thumbnail conform** (the user already has a finished thumbnail)? For the second load `island-conform` instead and continue there (the map is already created). For an existing map the case is already known from what it contains (`input/thumbnail_original.*` = conform case).
 
 ## Order (do not skip, do not reorder)
 0. **Version**: run `PY update.py --check` FIRST (do not rely on the start-up hook, its message may not be visible) and tell the user the result in one line. If a newer release exists, offer `/island-update` (one question), then continue.

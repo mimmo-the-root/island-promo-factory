@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.7 — /island-new: new artwork or conform my existing thumbnail
+
+- For a new map `/island-new` asks the second fork after code and title: make new artwork from separate images, or make my existing thumbnail conform (`island-conform`). An existing map with `input/thumbnail_original.*` continues in the conform case.
+
 ## v1.1.6 — New map: drop the files now or come back later; make my thumbnail conform (step 1)
 
 - After creating a map, Claude lists the folders for the files and offers two ways on: drop them now, or leave and resume later with `/island-new` (continue an existing map).
