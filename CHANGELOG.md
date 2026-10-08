@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.5 — Security: no request data in response headers (CodeQL alert #5)
+
+- `dashboard.py`: download headers now use fixed file names (`promo_pack.zip`, `variant_B.zip`, `variant_C.zip`); inline files carry no `Content-Disposition`. Closes the HTTP response splitting alert.
+- The console header shows only the version (`v1.1.5`), without the commit hash.
+
 ## v1.1.4 — /island-new asks again: continue a map or start a new one
 
 - The first question of `/island-new` is again "continue one of your existing maps, or start a new one?", with the list of existing maps; it was lost in v1.1.3.

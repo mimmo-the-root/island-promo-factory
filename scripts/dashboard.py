@@ -121,7 +121,7 @@ if(!shownSheet){$("sheet").src="/pack/lightbox.png?t="+Date.now();shownSheet=tru
 $("files").innerHTML=d.files.filter(f=>f.name!=="lightbox.png").map(f=>`<a href="/pack/${encodeURIComponent(f.name)}" download><b>${f.name}</b><span>${f.mb} MB</span></a>`).join("")}
 }catch(e){}}
 async function ver(){try{const v=await (await fetch("/api/version")).json();
-$("ver").textContent="v"+v.version+(v.commit?" \u00b7 "+v.commit:"");
+$("ver").textContent="v"+v.version;
 const u=$("upd");if(v.newer){u.style.display="block";u.textContent="Update available: v"+v.latest+" (you have v"+v.version+"). When this run is finished, close the window and run update.bat."}else{u.style.display="none"}}catch(e){}}
 tick();setInterval(tick,1000);ver();setInterval(ver,600000);
 const TOKEN="__TOKEN__";
@@ -271,8 +271,9 @@ def make_handler(proj):
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
-            for k, v in (extra or {}).items():
-                self.send_header(k, "".join(ch for ch in str(v) if ch.isprintable() and ch not in "\r\n"))
+            names = {"pack": "promo_pack.zip", "B": "variant_B.zip", "C": "variant_C.zip"}
+            if extra in names:          # fixed header text only: nothing from the request ever reaches a header
+                self.send_header("Content-Disposition", 'attachment; filename="%s"' % names[extra])
             self.end_headers()
             self.wfile.write(body)
 
@@ -301,7 +302,7 @@ def make_handler(proj):
                                 if f.is_file() and f.name != "lightbox.png":
                                     z.write(f, f.name)
                         return self.send(200, buf.getvalue(), "application/zip",
-                                         {"Content-Disposition": 'attachment; filename="%s_variant_%s.zip"' % (proj.name, n)})
+                                         "B" if n == "B" else "C")
                     if len(parts) == 2:
                         listing = {p.relative_to(vdir / n).as_posix(): p for p in (vdir / n).rglob("*") if p.is_file()}
                         f = listing.get(parts[1])          # only names that really exist in the folder; request text never reaches a path
@@ -354,12 +355,12 @@ def make_handler(proj):
                         if f.is_file() and f.name != "lightbox.png":
                             z.write(f, f.name)
                 return self.send(200, buf.getvalue(), "application/zip",
-                                 {"Content-Disposition": 'attachment; filename="%s_promo_pack.zip"' % proj.name})
+                                 "pack")
             if path.startswith("/pack/"):
                 f = {p.name: p for p in pack.iterdir() if p.is_file()}.get(path[6:]) if pack.is_dir() else None  # lookup in the listing: no path traversal
                 if f is not None:
                     ct = {"png": "image/png", "mp4": "video/mp4", "md": "text/plain", "txt": "text/plain"}.get(f.suffix[1:].lower(), "application/octet-stream")
-                    return self.send(200, f.read_bytes(), ct, {"Content-Disposition": 'inline; filename="%s"' % f.name})
+                    return self.send(200, f.read_bytes(), ct)
             self.send(404, b"not found", "text/plain")
 
         def do_POST(self):
