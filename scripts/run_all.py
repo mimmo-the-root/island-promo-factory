@@ -190,8 +190,8 @@ def main():
 
     save()
     if a.ui:
-        import dashboard
-        dashboard.serve(proj, a.port, open_browser=True)
+        import services
+        services.start_console(proj.name, a.port, open_browser=True)   # separate background process: it outlives this run
     timings = []
     failed = None
     for idx, (name, cmd, skip) in enumerate(stages):
@@ -231,13 +231,8 @@ def main():
         sys.exit(1)
     print("\nFULL RUN COMPLETE. Upload files: %s" % (proj / "promo_pack"))
     if a.ui:
-        print("Dashboard still open - keep this window open to download files; Ctrl+C or closing it stops the page.")
-        print("Later: dashboard.bat %s reopens the results page of the last run." % proj.name)
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            pass
+        print("The live console stays open in your browser (it closes by itself after 30 idle minutes).")
+        print("Reopen it any time: dashboard.bat %s   |   close it now: python scripts/services.py stop --project %s" % (proj.name, proj.name))
 
 
 if __name__ == "__main__":

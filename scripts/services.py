@@ -4,6 +4,7 @@ import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(_
 Usage:
   services.py comfy [--wait 240]                  start ComfyUI if it is not running (own window), wait until it answers
   services.py console --project SLUG [--no-open]  start the live console (dashboard) for the map, open it in the browser
+  services.py stop --project SLUG                 close the live console of the map
   services.py status [--project SLUG]             what is running
 Exit code 0 = service is up, 1 = it could not be started (the reason is printed).
 Env: COMFY_URL (default http://127.0.0.1:8188), PROMO_PROJECTS_DIR.
@@ -83,8 +84,8 @@ def start_console(slug, port=8765, open_browser=True):
         pass
     log = open(ROOT / "last_console.log", "w", encoding="utf-8")
     env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8", PROMO_PROJECTS_DIR=str(pp.projects_dir()))
-    cmd = [str(pp.find_python()), str(Path(__file__).resolve().parent / "dashboard.py"), "--project", slug, "--port", str(port), "--no-open"]
-    subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env, creationflags=FLAGS_DETACHED, close_fds=True)
+    cmd = [str(pp.find_python()), str(Path(__file__).resolve().parent / "dashboard.py"), "--project", slug, "--port", str(port), "--no-open", "--idle-min", os.environ.get("PROMO_CONSOLE_IDLE_MIN", "30")]
+    proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env, creationflags=FLAGS_DETACHED, close_fds=True)
     for _ in range(40):
         time.sleep(0.5)
         try:
@@ -95,7 +96,7 @@ def start_console(slug, port=8765, open_browser=True):
             if line.startswith("dashboard: http://"):
                 url = line.split("dashboard: ", 1)[1].strip()
                 if up(url + "/api/variants"):
-                    info_file.write_text(json.dumps({"url": url, "started": time.time()}), encoding="utf-8")
+                    info_file.write_text(json.dumps({"url": url, "pid": proc.pid, "started": time.time()}), encoding="utf-8")
                     print("console: %s" % url)
                     if open_browser:
                         webbrowser.open(url)
@@ -104,9 +105,34 @@ def start_console(slug, port=8765, open_browser=True):
     return 1
 
 
+def stop_console(slug):
+    f = pp.projects_dir() / slug / "final" / "console.json"
+    try:
+        info = json.loads(f.read_text(encoding="utf-8"))
+    except Exception:
+        print("console: not running")
+        return 0
+    pid = info.get("pid")
+    if pid and up(info["url"] + "/api/variants"):
+        try:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+            else:
+                os.kill(int(pid), 15)
+        except Exception as e:
+            print("console: could not stop it (%s)" % e)
+            return 1
+    try:
+        f.unlink()
+    except OSError:
+        pass
+    print("console: closed")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("what", choices=["comfy", "console", "status"])
+    ap.add_argument("what", choices=["comfy", "console", "stop", "status"])
     ap.add_argument("--project")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--wait", type=int, default=240)
@@ -119,6 +145,11 @@ def main():
             print("console needs --project SLUG")
             return 2
         return start_console(a.project, a.port, not a.no_open)
+    if a.what == "stop":
+        if not a.project:
+            print("stop needs --project SLUG")
+            return 2
+        return stop_console(a.project)
     print("ComfyUI: %s" % ("running" if up(COMFY_URL + "/system_stats") else "not running"))
     if a.project:
         try:

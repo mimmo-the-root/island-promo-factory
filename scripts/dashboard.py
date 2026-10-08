@@ -140,6 +140,9 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 </script></main></body></html>"""
 
 
+LAST_REQUEST = [time.time()]   # last time any page / API call reached the server (idle shutdown)
+
+
 def _safe(proj, rel):
     """Resolve rel inside the project folder only (no traversal); images only."""
     f = (proj / rel).resolve()
@@ -274,6 +277,7 @@ def make_handler(proj):
             self.wfile.write(body)
 
         def do_GET(self):
+            LAST_REQUEST[0] = time.time()
             u = urlparse(self.path)
             path, q = unquote(u.path), parse_qs(u.query)
             if path == "/":
@@ -359,6 +363,7 @@ def make_handler(proj):
             self.send(404, b"not found", "text/plain")
 
         def do_POST(self):
+            LAST_REQUEST[0] = time.time()
             u = urlparse(self.path)
             q = parse_qs(u.query)
             host_ok = (self.headers.get("Host") or "").split(":")[0] in ("127.0.0.1", "localhost")
@@ -418,15 +423,45 @@ def serve(proj, port=8765, open_browser=True, block=False):
     return srv, url
 
 
+def busy(proj):
+    """True while a run or a variant is generating: the console must stay up."""
+    try:
+        if json.loads((proj / "final" / "run_status.json").read_text(encoding="utf-8")).get("state") == "running":
+            return True
+    except Exception:
+        pass
+    for f in (proj / "variants").glob("*/status.json") if (proj / "variants").is_dir() else []:
+        try:
+            if json.loads(f.read_text(encoding="utf-8")).get("state") == "running":
+                return True
+        except Exception:
+            pass
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", default=None)
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--no-open", action="store_true")
+    ap.add_argument("--idle-min", type=float, default=0,
+                    help="exit by itself after this many minutes without any page request and without a run in progress (0 = never)")
     a = ap.parse_args()
     if a.project:
         os.environ["PROMO_PROJECT"] = a.project
-    serve(pp.project_dir(), a.port, not a.no_open, block=True)
+    proj = pp.project_dir()
+    if a.idle_min <= 0:
+        serve(proj, a.port, not a.no_open, block=True)
+        return
+    serve(proj, a.port, not a.no_open, block=False)
+    try:
+        while True:
+            time.sleep(1)
+            if time.time() - LAST_REQUEST[0] > a.idle_min * 60 and not busy(proj):
+                print("console: idle for %.0f min, closing" % a.idle_min)
+                return
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":

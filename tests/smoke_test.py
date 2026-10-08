@@ -176,6 +176,27 @@ def main():
     rc, out = run(py, ["scripts/doctor.py"], env2, root)
     check(rc == 0 and "READY" in out, "doctor.py reports no FAIL")
 
+    # update stage area: stored copies + rollback (local zips, no network)
+    import zipfile
+    ur = tmp / "upd_root"
+    (ur / "scripts").mkdir(parents=True)
+    (ur / "VERSION").write_text("1.0.0\n")
+    (ur / "scripts" / "x.py").write_text("old\n")
+    (ur / "Projects").mkdir()
+    (ur / "Projects" / "keep.txt").write_text("mine")
+    zp = tmp / "rel.zip"
+    with zipfile.ZipFile(zp, "w") as zf:
+        zf.writestr("VERSION", "1.1.0\n")
+        zf.writestr("scripts/x.py", "new\n")
+    rc, out = run(py, ["scripts/update.py", "--root", str(ur), "--zip", str(zp)], env2, root)
+    check(rc == 0 and (ur / "scripts" / "x.py").read_text().strip() == "new", "update applies a release zip")
+    check((ur / "_releases" / "v1.0.0.zip").exists() and (ur / "_releases" / "v1.1.0.zip").exists(), "stage area keeps the old and the new version")
+    rc, out = run(py, ["scripts/update.py", "--root", str(ur), "--rollback"], env2, root)
+    check(rc == 0 and (ur / "VERSION").read_text().strip() == "1.0.0" and (ur / "scripts" / "x.py").read_text().strip() == "old", "rollback restores the previous version")
+    check((ur / "Projects" / "keep.txt").read_text() == "mine", "update/rollback never touch Projects/")
+    rc, out = run(py, ["scripts/update.py", "--root", str(ur), "--rollback", "1.1.0"], env2, root)
+    check(rc == 0 and (ur / "VERSION").read_text().strip() == "1.1.0", "rollback to a named version (roll forward) works")
+
     server.shutdown()
     print("\n%d check(s) failed, %.0f s" % (len(FAILS), time.time() - t0))
     if keep:

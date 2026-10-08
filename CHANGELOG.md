@@ -1,7 +1,21 @@
 # Changelog
 
+## v1.1.2 — Batch windows close by themselves, live console stays available, stage area with rollback
+
+- Every `.bat` now ends on its own after a 10 s countdown; it only waits for a key when something failed (the error stays readable). `demo.bat` and `run_all.bat` no longer hang until Ctrl+C.
+- The live console is a separate background process: `run_all --ui` and `dashboard.bat <map>` start it (`scripts/services.py console`) and return. It closes itself after 30 idle minutes (`PROMO_CONSOLE_IDLE_MIN`, 0 = never) and never while a run or a variant is working.
+- `python scripts/services.py stop --project <map>` closes the console at once; `console.json` now records its process id.
+- **Stage area `_releases/`:** every downloaded release is kept as `_releases/v<version>.zip`, and the version you leave is stored there before an update replaces it (last 5 copies, never overwritten). `update.bat --list` shows them, `update.bat --rollback [version]` goes back (or forward) without touching `Projects/`, brand files or models.
+- Demo images in `docs/img/` are real, complete outputs of the STORM CASTLE example run (see NOTICE.md).
+
 Scheme: `VERSION` file = single source of truth (`X.Y.Z`); commit `vX.Y.Z: summary`; git tag `vX.Y.Z`; the GitHub Release
 is built by CI from the tag. Entries below are newest first. `python scripts/release.py check` keeps VERSION and this file in step.
+
+## v1.1.1 — Clearer install: setups, ComfyUI + model steps, console and demo images
+
+- README and INSTALL rewritten around setups (Full / Light / Remote ComfyUI): ComfyUI and models are clearly "not included", step-by-step ComfyUI + model install,
+  "with Claude Code" and "without Claude" paths, console / thumbnail / lightbox images from an example map (`docs/img/`, see NOTICE.md). `doctor.bat --profile light` (or `PROMO_PROFILE=light`).
+- `doctor.bat` now passes its arguments (`--profile light`); `intake.py` honours the light profile.
 
 ## v1.1.0 — Claude as orchestrator: step 0 intake, skills, one cinematic look, colour fix
 

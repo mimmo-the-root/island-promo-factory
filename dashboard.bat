@@ -15,6 +15,12 @@ if "%MAP%"=="" (
   pause
   exit /b 1
 )
-echo Results page for %MAP% - keep this window open to download files, close it to stop.
-"%PY%" "%PF%scripts\dashboard.py" --project %MAP%
-pause
+"%PY%" "%PF%scripts\services.py" console --project %MAP%
+if errorlevel 1 (
+  pause
+  exit /b 1
+)
+echo The results page keeps running in the background (closes by itself after 30 idle minutes).
+echo Stop it now: python scripts\services.py stop --project %MAP%
+timeout /t 5 >nul 2>&1
+exit /b 0

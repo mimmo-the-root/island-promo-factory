@@ -18,6 +18,12 @@ if "%MAP%"=="" (
 set PROMO_PROJECT=%MAP%
 "%PY%" "%PF%scripts\run_all.py" --project %MAP% --ui %2 %3 %4
 set "EC=%ERRORLEVEL%"
-if not "%EC%"=="0" echo FULL RUN FAILED - see last_run_all.log
-pause
-exit /b %EC%
+if not "%EC%"=="0" (
+  echo FULL RUN FAILED - see last_run_all.log
+  pause
+  exit /b %EC%
+)
+echo.
+echo This window closes in 10 seconds (Ctrl+C to keep it).
+timeout /t 10 >nul 2>&1
+exit /b 0

@@ -112,6 +112,10 @@ def check_video(proj):
 
 
 def check_engine():
+    import os
+    if os.environ.get("PROMO_PROFILE", "").lower() == "light":
+        add("OK", "light profile: ComfyUI not needed (run with --no-qwen)")
+        return
     try:
         doctor.get(doctor.COMFY_URL + "/system_stats")
     except Exception:

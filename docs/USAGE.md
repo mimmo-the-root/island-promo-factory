@@ -15,7 +15,7 @@ grade, bloom, vignette; videos add grain, letterbox, push-ins, speed changes and
 The recording's own audio is replaced by generated music (`audio/gameplay_music.wav`, reused by the trailer; your own `audio/music.mp3` wins).
 
 ## Variants, prompt control, housekeeping
-- `dashboard.bat`: live console that stays open after the run; buttons generate variants B/C (new seed, A untouched). CLI: `variant.py --project <slug> --name B`.
+- `dashboard.bat`: live console that keeps running in the background after the run (the batch window closes by itself; the console closes after 30 idle minutes, or now with `python scripts/services.py stop --project <map>`); buttons generate variants B/C (new seed, A untouched). CLI: `variant.py --project <slug> --name B`.
 - `run_all.bat <map> --review-prompt`: shows and lets you edit the Qwen prompt before generation (`qwen_prompt_custom.txt`); `prompt.extra` / `prompt.avoid` in `config.json`.
 - `python scripts/cleanup.py --project <slug> [--apply]`: moves old archives (`final/_previous`, `_runs`, `captures/_previous`) to `_to_delete/`; nothing is erased.
 

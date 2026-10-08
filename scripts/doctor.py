@@ -1,7 +1,7 @@
 import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(__file__).resolve().parent))  # embedded python ignores script dir
 """First-run check: what works, what is missing and exactly what to do about it.
 
-Usage: doctor.py [--quiet]
+Usage: doctor.py [--quiet] [--profile full|light]   (light, or PROMO_PROFILE=light: no ComfyUI / models expected, no AI art)
 OK   = ready.   WARN = a feature is off (the kit still runs without it).   FAIL = nothing will run until you fix it.
 Exit code 0 unless something FAILed.
 """
@@ -81,6 +81,14 @@ def main():
            "create the demo map:  python scripts\\make_demo.py     or your own:  new_map.bat my-map \"MY TITLE\"")
 
     # --- ComfyUI + models: WARN only, --no-qwen works without them ---
+    light = os.environ.get("PROMO_PROFILE", "").lower() == "light" or ("--profile" in sys.argv and sys.argv[sys.argv.index("--profile") + 1:][:1] == ["light"])
+    if light:
+        report("OK", "light profile: ComfyUI and the AI models are not needed (AI horizontal art is off; use --no-qwen)")
+        fails, warns = results.count("FAIL"), results.count("WARN")
+        print("\n%s" % ("READY (light profile)." if not fails and not warns else
+                        "NOT READY - fix the FAIL lines above." if fails else
+                        "READY (light profile) with %d optional item(s) missing (see WARN lines)." % warns))
+        sys.exit(1 if fails else 0)
     try:
         get(COMFY_URL + "/system_stats")
         report("OK", "ComfyUI reachable at %s" % COMFY_URL)

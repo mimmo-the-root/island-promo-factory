@@ -34,4 +34,7 @@ if not "%EC%"=="0" (
   exit /b %EC%
 )
 echo Trailer: %PD%\%MAP%\final\trailer.mp4
-pause
+echo.
+echo This window closes in 10 seconds (Ctrl+C to keep it).
+timeout /t 10 >nul 2>&1
+

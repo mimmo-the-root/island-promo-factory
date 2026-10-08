@@ -12,6 +12,7 @@ First time after upgrading from v1.0.0: run `update.bat` once more (or `python s
   code and docs, and prints what changed. Check only: `update.bat --check`.
 - Safe by design: it **never touches** `Projects/`, `Resources/brand/`, `Resources/badges/`, `Resources/audio/`, your models or logs.
   Every replaced file is first copied to `_update_backup/<timestamp>/`.
+- **Stage area and rollback:** each update keeps the downloaded release and the version you leave in `_releases/` (last 5, never overwritten). `update.bat --list` shows them; `update.bat --rollback` returns to the previous one, `update.bat --rollback 1.1.1` to a named one (also to move forward again). Maps and brand files are never touched.
 - If you installed with `git clone`, use `git pull` instead (the updater tells you so).
 - Offline? Download the release zip from GitHub and run `python scripts/update.py --zip that-file.zip`.
 - No network checks at all: set `PROMO_NO_UPDATE_CHECK=1`.

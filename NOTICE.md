@@ -20,3 +20,6 @@ island (for licensed franchises, follow the IP holder's brand rules).
 
 ## Tools used at runtime (not bundled)
 ComfyUI (GPL-3.0), Pillow (HPND), ffmpeg (LGPL/GPL, depending on build), Real-ESRGAN (BSD-3-Clause, optional).
+
+## Images in docs/img
+The screenshots in `docs/img/` show the output of the kit for an example map built in UEFN. Fortnite and Unreal Editor for Fortnite are trademarks of Epic Games, Inc.; this project is unofficial.

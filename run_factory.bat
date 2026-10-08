@@ -25,8 +25,11 @@ set "EC=%ERRORLEVEL%"
 echo.
 if not "%EC%"=="0" (
   echo PIPELINE FAILED - see last_run.log
-) else (
-  echo PIPELINE COMPLETE
+  pause
+  exit /b %EC%
 )
-pause
-exit /b %EC%
+echo PIPELINE COMPLETE
+echo.
+echo This window closes in 10 seconds (Ctrl+C to keep it).
+timeout /t 10 >nul 2>&1
+exit /b 0
