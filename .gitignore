@@ -1,0 +1,42 @@
+# generated per-map work
+Projects/*
+!Projects/.gitkeep
+last_run.log
+last_qwen.log
+last_trailer.log
+RUN_REPORT.md
+
+# models and media
+*.safetensors
+*.pth
+*.ckpt
+*.gguf
+*.mov
+*.mp4
+*.mkv
+*.webm
+
+# local brand assets (supply your own)
+Resources/brand/font/*
+!Resources/brand/font/README.txt
+Resources/badges/*
+!Resources/badges/README.txt
+Resources/bin/
+
+__pycache__/
+.env
+_to_delete_*/
+_backup_*/
+
+# update tooling (local state)
+.update_cache.json
+_update_backup/
+last_run_all.log
+
+# third-party ComfyUI install that lives inside this folder (never publish it)
+ComfyUI_windows_portable/
+ComfyUI_windows_portable_*.7z
+
+# official brand badges (Epic / PEGI): supply your own, never publish
+Resources/brand/pegi/
+Resources/brand/uefn/

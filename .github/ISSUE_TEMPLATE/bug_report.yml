@@ -1,0 +1,61 @@
+name: Bug report
+description: Something in Island Promo Factory does not work as expected
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! This form is for bugs in the **tool itself**, not in your own island.
+        Please do not paste API keys or private data. Run `doctor.bat` first and paste its result below.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in the dashboard header, `doctor.bat`, or the VERSION file
+      placeholder: "v1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Images / Qwen / ComfyUI
+        - Title / logo / thumbnails
+        - Trailer / gameplay video / music
+        - Promo pack / lightbox / validator
+        - Dashboard / variants
+        - Install / update / .bat files
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact command you ran, e.g. `run_all.bat my-map`
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log / doctor output
+      description: Last lines of `last_run_all.log`, or the output with `PROMO_DEBUG=1`
+      render: shell
+  - type: input
+    id: system
+    attributes:
+      label: System
+      placeholder: "Windows 11, RTX 4070 12 GB, ffmpeg 7.1 GPL"

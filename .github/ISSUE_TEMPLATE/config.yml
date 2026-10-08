@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/mimmo-the-root/island-promo-factory/security/advisories/new
+    about: Report security problems privately, not as a public issue.
+  - name: Install help
+    url: https://github.com/mimmo-the-root/island-promo-factory/blob/main/docs/INSTALL.md
+    about: Check the install guide first; run doctor.bat and paste its output in your issue.
