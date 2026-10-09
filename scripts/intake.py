@@ -51,6 +51,9 @@ def check_config(proj, cfg):
     styles = list(brand["typography"]["styles"])
     style = cfg.get("style", "")
     add("OK" if style in styles else "BLOCK", "title style: %s" % (style or "missing"), "choose one of: %s" % ", ".join(styles))
+    if style in styles and cfg.get("style_chosen") is False:
+        add("WARN", "title style %s is only the default, nobody chose it from the artwork" % style,
+            "look at the background and character, pick the style that fits (intake.py --project <slug> --init --style STYLE)")
     chars = cfg.get("characters") or []
     if not chars:
         add("BLOCK", "no character defined in config.json", "add one entry under characters (file + identity)")
@@ -167,6 +170,9 @@ def main():
             if val and cfg.get(key) != val:
                 cfg[key] = val
                 changed.append(key)
+        if a.style and cfg.get("style_chosen") is not True:
+            cfg["style_chosen"] = True
+            changed.append("style_chosen")
         if a.identity and cfg.get("characters"):
             cfg["characters"][0]["identity"] = a.identity
             changed.append("identity")

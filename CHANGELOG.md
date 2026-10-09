@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.9 — Title style is chosen from the artwork, not left at the default
+
+- **Title style no longer silently stays SCI_FI:** a new map records `style_chosen: false` until a style is really chosen (`intake.py --style`). `intake.py` warns while the default is still in place, and the intake skill now tells Claude to pick the style from what it sees (HORROR, FIRE, ICE, NEON, GOLD, WHITE; SCI_FI only for tech/space) and to decide as soon as the images are in.
+
 ## v1.1.8 — Commands renamed to /promo-*; conform case: clean background experiment
 
 - **Commands renamed** (you create a promo package, not a new island): `/promo-pack` (was `/island-new`), `/promo-conform` (was `/island-conform`), `/promo-update`, `/promo-console`. The next start-up sync removes the old command files from `.claude/commands/` (backed up in `_update_backup/`).

@@ -17,6 +17,7 @@ STYLES = ("WHITE", "SCI_FI", "FIRE")  # see Resources/brand/brand.json for all s
 def main():
     args = sys.argv[1:]
     style = "SCI_FI"
+    style_chosen = "--style" in args   # False = the default stands in until the style is chosen from the artwork
     if "--style" in args:
         i = args.index("--style")
         style = args[i + 1]
@@ -44,6 +45,7 @@ def main():
         "title": title,
         "island_code": "",   # e.g. 1234-5678-9012 - shown on the trailer end card and in the upload checklist
         "style": style,
+        "style_chosen": style_chosen,
         "scene": {"background": "background/background.png"},
         "characters": [{
             "file": "characters/character_01.png",
