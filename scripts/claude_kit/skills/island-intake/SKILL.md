@@ -31,9 +31,10 @@ Whatever the user's names are, copy/rename the files to the standard names yours
 ## 3b. Decide style and character yourself
 Look at the background and the character image (Read tool). Then:
 - **Style:** pick the title style that suits the artwork from `Resources/brand/brand.json` (`typography.styles`; for example SCI_FI for tech/space, FIRE for fire/war/lava, WHITE for clean/snow/light). Write it with `--style`.
+- **Music mood** (same logic as the style, chosen from the artwork and the map's genre): `dark` for horror/spooky/ghosts, `epic` for war/fantasy/sci-fi battles, `calm` for chill/cozy/parkour-relax, `action` for fast arcade/PvP. Save it with `--mood`. It drives the trailer music and the gameplay music.
 - **Character identity:** write ONE sentence describing what you see and what must stay exactly as is (helmet/face/hair, armor, weapon, companion). Invent nothing.
 - **Never keep the default.** A new map starts with `SCI_FI` only as a placeholder (`style_chosen: false` in `config.json`, and `intake.py` warns). Pick the style from what you SEE and vary it: HORROR for ghosts/haunted/dark, FIRE for war/lava, ICE for snow, NEON for city/arcade/party, GOLD for treasure/royal, WHITE for clean/light, SCI_FI only for tech/space. If the images are not there yet, decide as soon as they are, before any title or logo is made.
-Save both: `PY intake.py --project <slug> --init --style STYLE --identity "..."`. Tell the user the two choices in one line; change them only if the user objects.
+Save all three: `PY intake.py --project <slug> --init --style STYLE --mood MOOD --identity "..."`. Tell the user the three choices in one line; change them only if the user objects.
 
 ## 4. Verify
 Run `PY intake.py --project <slug>` (add `--json` if you want to parse it). Fix every **BLOCK** with the user, mention every **WARN** (ComfyUI off = no AI artwork; start it with `PY services.py comfy` or use `--no-qwen`). Repeat until it prints **READY**, then hand back to `island-promo`.

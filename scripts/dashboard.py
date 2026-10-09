@@ -43,7 +43,7 @@ main{position:relative;max-width:1240px;margin:0 auto;padding:22px 18px 70px}
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
 .ver{margin-left:10px;padding:2px 8px;border:1px solid var(--line);border-radius:99px;color:var(--dim);letter-spacing:.06em;font-weight:600}
 .upd{display:none;margin:0 0 14px;padding:10px 14px;border-radius:10px;border:1px solid var(--amb);background:rgba(255,194,71,.1);color:var(--txt)}
-.brand{font-size:12px;letter-spacing:.28em;color:var(--c1);font-weight:700}.map{font-size:34px;font-weight:800;letter-spacing:-.01em;margin:2px 0}
+.brand{font-size:12px;letter-spacing:.28em;color:var(--c1);font-weight:700}.map{font-size:34px;font-weight:800;letter-spacing:-.01em;margin:2px 0}.code{display:none;font-family:ui-monospace,Consolas,monospace;font-size:15px;letter-spacing:.14em;color:var(--c1);font-weight:700}
 .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--panel);font-size:12px;letter-spacing:.12em;font-weight:700}
 .badge i{width:9px;height:9px;border-radius:50%;background:var(--dim)}.badge.running i{background:var(--c1);animation:pulse 1s infinite}.badge.done i{background:var(--ok)}.badge.failed i{background:var(--bad)}
 @keyframes pulse{50%{opacity:.3;transform:scale(.7)}}
@@ -86,7 +86,7 @@ main{position:relative;max-width:1240px;margin:0 auto;padding:22px 18px 70px}
 .vbox button:disabled{opacity:.45;cursor:not-allowed}.vbox img{width:100%;border-radius:8px;margin-top:8px;border:1px solid var(--line)}
 .vbox a{color:var(--c1)}
 </style></head><body><main>
-<div class="top"><div><div class="brand">ISLAND PROMO FACTORY<span class="ver" id="ver"></span></div><div class="map" id="map">...</div></div><div class="badge idle" id="badge"><i></i><span id="btxt">IDLE</span></div></div>
+<div class="top"><div><div class="brand">ISLAND PROMO FACTORY<span class="ver" id="ver"></span></div><div class="map" id="map">...</div><div class="code" id="code"></div></div><div class="badge idle" id="badge"><i></i><span id="btxt">IDLE</span></div></div>
 <div class="upd" id="upd"></div>
 <div class="clock"><div><small>PROGRESS</small><b class="pct" id="pct">0%</b></div><div><small>ELAPSED</small><b id="el">0:00</b></div><div><small>TIME LEFT (EST.)</small><b id="eta">--:--</b></div></div>
 <div class="bar" id="bar"></div><div class="note" id="note">Waiting for a run...</div>
@@ -104,7 +104,7 @@ const fmt=s=>{s=Math.max(0,Math.round(s));const m=Math.floor(s/60);return m+":"+
 const esc=t=>t.replace(/&/g,"&amp;").replace(/</g,"&lt;");
 function cls(l){if(/FAILED|ERROR|Traceback/.test(l))return"bad";if(/WARNING/.test(l))return"wr";if(/^\s*(---|=+)|RUNNING:/.test(l))return"hd";if(/SUCCESS|OK:|READY|done|PASS|written/.test(l))return"ok";return""}
 async function tick(){try{const d=await (await fetch("/api/status")).json();const st=d.state||"idle";
-$("map").textContent=d.map||"";$("badge").className="badge "+st;$("btxt").textContent=st==="running"?"RUNNING":st==="done"?(d.kind==="activity"?"STEP DONE":"COMPLETE"):st==="failed"?"FAILED":"IDLE";
+$("map").textContent=d.map||"";{const c=$("code");if(d.island_code){c.style.display="block";c.textContent="ISLAND "+d.island_code}else{c.style.display="none"}}$("badge").className="badge "+st;$("btxt").textContent=st==="running"?"RUNNING":st==="done"?(d.kind==="activity"?"STEP DONE":"COMPLETE"):st==="failed"?"FAILED":"IDLE";
 $("pct").textContent=Math.round((d.pct||0)*100)+"%";$("el").textContent=fmt(d.elapsed||d.total||0);
 $("eta").textContent=st==="running"?(d.eta==null?"--:--":"~"+fmt(d.eta)):st==="done"?"0:00":"--:--";
 const runSt=(d.stages||[]).filter(s=>s.state!=="skipped"),tot=runSt.reduce((a,s)=>a+(s.expected||30),0)||1;
@@ -339,6 +339,10 @@ def make_handler(proj):
                 return self.send(200, json.dumps(V.info(check=False)).encode("utf-8"), "application/json")
             if path == "/api/status":
                 d = {"map": proj.name, "state": "idle", "stages": []}
+                try:
+                    d["island_code"] = str(json.loads((proj / "config.json").read_text(encoding="utf-8")).get("island_code", "")).strip()
+                except Exception:
+                    d["island_code"] = ""
                 d.update(read_status(proj))
                 lines = log_lines_for(proj, read_status(proj))
                 d["log"] = lines[-80:]

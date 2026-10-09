@@ -179,7 +179,7 @@ def build_scenes(ffmpeg, video, moments, total, dest, music_path, seed, source_d
         centre = (a + b) / 2.0
         st = max(0.0, min(centre - need / 2.0, source_duration - need))
         segs.append((round(st, 3), round(need, 3)))
-    buf, bpm, key, prog = mg.generate(seed, total + 1.0, "action")
+    buf, bpm, key, prog = mg.generate(seed, total + 1.0, mg.config_mood())   # mood chosen for the map (dark for horror, epic, calm, action)
     music_path = Path(music_path)
     music_path.parent.mkdir(parents=True, exist_ok=True)
     mg.write_wav(music_path, buf)

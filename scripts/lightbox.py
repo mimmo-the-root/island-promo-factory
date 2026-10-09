@@ -134,7 +134,7 @@ def main():
     cfg = pp.load_config()
     title = str(cfg.get("title", pp.project_name())).upper()
 
-    W, pad, gap, head = a.width, 48, 30, 210
+    W, pad, gap, head = a.width, 48, 30, 236
     cell_w = (W - 2 * pad - gap * (a.cols - 1)) // a.cols
     box_h = int(cell_w * 0.70)
     cap_h = 104
@@ -167,6 +167,9 @@ def main():
     gradient_text(sheet, (W - pad, 44), right, font(40), anchor="ra")
     d.text((W - pad, 98), "%d assets  -  %d video  -  v%s  -  %s" % (len(allf), n_vid, V.read_version(), time.strftime("%Y-%m-%d")),
            font=mono(22), fill=DIM, anchor="ra")
+    code = str(cfg.get("island_code", "")).strip()
+    if code:
+        gradient_text(sheet, (pad, 152), "ISLAND CODE  " + code, mono(28))
     d.text((W - pad, 130), "pick the numbers you want to upload", font=mono(20), fill=DIM, anchor="ra")
     sheet.paste(gradient(W - 2 * pad, 3), (pad, head - 28))
 

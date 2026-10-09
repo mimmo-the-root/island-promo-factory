@@ -2,6 +2,7 @@ import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(_
 """Generate an original, royalty-free trailer music bed (numpy only, no samples, no models).
 
 Usage: music_generator.py [--seed N] [--seconds 40] [--mood action|dark|epic|calm] [--out PATH]
+Default mood: "music_mood" in the map's config.json (chosen from the artwork, like the title style), else action.
 Default output: Projects/<map>/audio/music.wav (picked up by trailer_builder.py).
 The same seed always gives the same track; a new seed gives a different one
 (key, tempo, chord progression, arpeggio pattern and drum pattern change).
@@ -24,6 +25,16 @@ PROGRESSIONS = {
     "action": [[0, 5, 2, 6], [0, 6, 5, 6], [0, 0, 5, 6], [0, 5, 6, 4]],
 }
 TEMPO = {"dark": (92, 108), "epic": (104, 124), "calm": (76, 90), "action": (146, 168)}
+
+
+def config_mood():
+    """The map's music mood (config.json "music_mood"): dark = horror/spooky, epic = war/fantasy, calm = chill/cozy, action = fast arcade. Default action."""
+    try:
+        import json
+        m = json.loads((pp.project_dir() / "config.json").read_text(encoding="utf-8")).get("music_mood", "action")
+        return m if m in PROGRESSIONS else "action"
+    except Exception:
+        return "action"
 
 
 def midi_hz(m):
@@ -285,14 +296,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=None, help="default: random (printed, so you can reproduce it)")
     ap.add_argument("--seconds", type=float, default=40.0)
-    ap.add_argument("--mood", choices=sorted(PROGRESSIONS), default="action")
+    ap.add_argument("--mood", choices=sorted(PROGRESSIONS), default=None, help="default: music_mood from the map config.json, else action")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
     seed = a.seed if a.seed is not None else int(np.random.SeedSequence().entropy % 100000)
+    a.mood = a.mood or config_mood()
     out = _P(a.out) if a.out else pp.project_dir() / "audio" / "music.wav"
     out.parent.mkdir(parents=True, exist_ok=True)
     buf, bpm, key, prog = generate(seed, a.seconds, a.mood)
     write_wav(out, buf)
+    if not a.out:
+        (out.parent / "music_mood.txt").write_text(a.mood, encoding="utf-8")   # lets run_all redo the track when the mood changes
     print("music: seed=%d mood=%s bpm=%d key=+%d progression=%s" % (seed, a.mood, bpm, key, prog))
     print("written: %s (%.0f s). Original synthesis, no third-party material." % (out, a.seconds))
     print("Rebuild the trailer: python scripts/trailer_builder.py")

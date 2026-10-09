@@ -44,6 +44,33 @@ ITEMS = [
 ]
 
 
+def make_prores(src, dest, ffmpeg, ffprobe):
+    """ProRes 422 .mov next to the H.264 .mp4 (Epic's recommended delivery format): 10-bit 4:2:2, stereo uncompressed PCM audio, native frame rate.
+    LT when it stays well under the portal's 400 MB limit, else Proxy. Returns (size_mb, profile name) or None."""
+    import json as _json
+    import subprocess
+    dur = 30.0
+    if ffprobe:
+        try:
+            r = subprocess.run([str(ffprobe), "-v", "error", "-show_entries", "format=duration", "-of", "json", str(src)], capture_output=True, text=True)
+            dur = float(_json.loads(r.stdout)["format"]["duration"])
+        except Exception:
+            pass
+    for prof, pname, mb_s in ((1, "LT", 13.5), (0, "Proxy", 6.0)):
+        if prof == 1 and dur * mb_s > 330:
+            continue
+        cmd = [str(ffmpeg), "-y", "-v", "error", "-i", str(src), "-c:v", "prores_ks", "-profile:v", str(prof), "-vendor", "apl0",
+               "-pix_fmt", "yuv422p10le", "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2", str(dest)]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode != 0 or not dest.exists():
+            print("WARNING: ProRes export failed for %s: %s" % (dest.name, (r.stderr or "").strip()[-200:]))
+            return None
+        mb = dest.stat().st_size / 1048576
+        if mb < 395:
+            return mb, pname
+    return None
+
+
 def copy_with_retry(src, dst, attempts=5):
     """Copy a file, retrying on transient Windows errors (file briefly locked)."""
     import time
@@ -121,6 +148,17 @@ def main():
         copy_with_retry(src, out / name)
         ready.append((name, (1920, 1080), mb, False))
         print(f"OK: {name} ({mb:.1f} MB, validated)")
+        # ProRes MOV twin (Epic recommends ProRes for trailer/gameplay): config "video_formats" (default both) or PROMO_VIDEO_FORMATS=mp4|prores|both
+        fmts = str(__import__("os").environ.get("PROMO_VIDEO_FORMATS") or cfg.get("video_formats") or "both").lower()
+        ff = vt.find_tool("ffmpeg", "FFMPEG_PATH")
+        if fmts in ("both", "prores") and ff:
+            mov = out / (name[:-4] + "_prores.mov")
+            res = make_prores(src, mov, ff, vt.find_tool("ffprobe", "FFPROBE_PATH"))
+            if res:
+                ready.append((mov.name, (1920, 1080), res[0], False))
+                print(f"OK: {mov.name} ({res[0]:.0f} MB, ProRes 422 {res[1]}, 10-bit, PCM audio)")
+        if fmts == "prores" and (out / name).exists():
+            (out / name).unlink()
     shots = sorted((project / "captures" / "screenshots").glob("screenshot_*.png"))[:3] if (project / "captures" / "screenshots").is_dir() else []
     if not shots:
         manual.append("screenshots")

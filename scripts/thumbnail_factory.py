@@ -104,6 +104,35 @@ def create_vertical(artwork_vertical):
     return resize_cover(artwork_vertical, *VERTICAL_SIZE)
 
 
+def place_title_least_busy(thumbnail, cropped):
+    """Conform case: the artwork is a finished picture (no empty space reserved for a title). The title is scaled to ~42% of the width and
+    put in the least busy spot INSIDE the safe area (top row just under the 200 px margin, or the bottom row above it)."""
+    import numpy as np
+    from PIL import ImageFilter
+    W, H = HORIZONTAL_SIZE
+    tw = int(W * float(os.environ.get("PROMO_FIT_TITLE_W", "0.42")))
+    th = max(1, int(cropped.height * tw / cropped.width))
+    t = cropped.resize((tw, th), Image.Resampling.LANCZOS)
+    g = thumbnail.convert("L")
+    edges = np.array(g.filter(ImageFilter.FIND_EDGES)).astype(np.float32)
+    lum = np.array(g).astype(np.float32)
+    best = None
+    rows = {"top": SAFE_MARGIN + 12, "bottom": H - SAFE_MARGIN - 12 - th}
+    for name, y in rows.items():
+        for cx in np.arange(0.26, 0.741, 0.02):
+            x = int(round(W * cx - tw / 2))
+            x = max(SAFE_MARGIN // 2, min(x, W - tw - SAFE_MARGIN // 2))
+            reg_e, reg_l = edges[y:y + th, x:x + tw], lum[y:y + th, x:x + tw]
+            score = float(reg_e.mean()) + 0.25 * float(reg_l.std()) + (0.0 if name == "top" else 4.0)   # the top row is preferred
+            if best is None or score < best[0]:
+                best = (score, x, y, name)
+    _, x, y, name = best
+    log(f"horizontal title fitted: {tw}x{th} at x={x} y={y} ({name} row, least busy spot)")
+    result = thumbnail.copy()
+    result.alpha_composite(t, (x, y))
+    return result
+
+
 def apply_title_horizontal(thumbnail, title):
     if title.size != HORIZONTAL_SIZE:
         title = title.resize(HORIZONTAL_SIZE, Image.Resampling.LANCZOS)
@@ -113,8 +142,10 @@ def apply_title_horizontal(thumbnail, title):
     if bbox is None:
         fail("title.png is fully transparent.")
 
-    # Keep the original vertical position, move the title horizontally.
     cropped = title.crop(bbox)
+    if os.environ.get("PROMO_FIT_TITLE") == "1":
+        return place_title_least_busy(thumbnail, cropped)
+    # Keep the original vertical position, move the title horizontally.
     x = round(HORIZONTAL_SIZE[0] * HORIZONTAL_TITLE_CENTER_X - cropped.width / 2)
     x = max(SAFE_MARGIN // 2, min(x, HORIZONTAL_SIZE[0] - cropped.width - SAFE_MARGIN // 2))
     log(f"horizontal title bbox={bbox} x={x}")

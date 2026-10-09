@@ -4,7 +4,7 @@ import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(_
 Usage:
   intake.py                                   list the existing maps
   intake.py --project SLUG                    check an existing map (read-only)
-  intake.py --project SLUG --init --title "MAP TITLE" --island-code 1234-5678-9012 [--style SCI_FI] [--identity "..."]
+  intake.py --project SLUG --init --title "MAP TITLE" --island-code 1234-5678-9012 [--style SCI_FI] [--mood dark] [--identity "..."]
                                               create the map (or reuse it) and write these values into config.json
   add --json for a machine-readable report.
 
@@ -54,6 +54,10 @@ def check_config(proj, cfg):
     if style in styles and cfg.get("style_chosen") is False:
         add("WARN", "title style %s is only the default, nobody chose it from the artwork" % style,
             "look at the background and character, pick the style that fits (intake.py --project <slug> --init --style STYLE)")
+    if cfg.get("music_mood") not in ("action", "dark", "epic", "calm"):
+        add("WARN", "music mood not chosen (the default is action)", "pick it from the artwork: intake.py --project <slug> --init --mood dark|epic|calm|action")
+    else:
+        add("OK", "music mood: %s" % cfg["music_mood"])
     chars = cfg.get("characters") or []
     if not chars:
         add("BLOCK", "no character defined in config.json", "add one entry under characters (file + identity)")
@@ -140,6 +144,7 @@ def main():
     ap.add_argument("--title")
     ap.add_argument("--island-code")
     ap.add_argument("--style")
+    ap.add_argument("--mood", choices=["action", "dark", "epic", "calm"], help="music mood chosen from the artwork: dark (horror/spooky), epic (war/fantasy/sci-fi), calm (chill/cozy), action (fast arcade)")
     ap.add_argument("--identity", help="one-sentence description of the character (what must be preserved)")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
@@ -170,6 +175,9 @@ def main():
             if val and cfg.get(key) != val:
                 cfg[key] = val
                 changed.append(key)
+        if a.mood and cfg.get("music_mood") != a.mood:
+            cfg["music_mood"] = a.mood
+            changed.append("music_mood")
         if a.style and cfg.get("style_chosen") is not True:
             cfg["style_chosen"] = True
             changed.append("style_chosen")

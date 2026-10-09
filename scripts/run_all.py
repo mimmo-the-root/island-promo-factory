@@ -83,6 +83,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", default=None)
     ap.add_argument("--no-qwen", action="store_true")
+    ap.add_argument("--standard", action="store_true", help="force the normal generated artwork even if the map is in the conform case")
     ap.add_argument("--conform", action="store_true",
                     help="case 'make my thumbnail conform': keep the user's own landscape thumbnails (01/02) and build portrait, logo and lobby "
                          "from the clean background + extracted hero (no Qwen in this stage)")
@@ -110,6 +111,12 @@ def main():
     env.setdefault("PROMO_PLAN_B", "bust")
     py = sys.executable
     proj = pp.project_dir()
+    try:
+        if json.loads((proj / "config.json").read_text(encoding="utf-8")).get("case") == "conform" and not a.standard and not a.conform:
+            a.conform = True
+            print("This map is in the conform case: keeping your own landscape art, no new Qwen artwork (--standard forces the normal flow).")
+    except Exception:
+        pass
     caps = proj / "captures" / "gameplay"
     print("=" * 64)
     import version as V
@@ -117,7 +124,7 @@ def main():
     print("=" * 64)
 
     stages = []  # (name, [cmd], reason-to-skip or None)
-    img = [py, str(SCRIPTS / "factory.py"), "--project", pp.project_name()] + (["--no-qwen"] if a.no_qwen else []) + (["--conform"] if a.conform else [])
+    img = [py, str(SCRIPTS / "factory.py"), "--project", pp.project_name()] + (["--no-qwen"] if a.no_qwen else []) + (["--conform"] if a.conform else []) + (["--standard"] if a.standard else [])
     stages.append(("images", None if a.skip_images else img, "--skip-images" if a.skip_images else None))
 
     src = None
@@ -149,6 +156,15 @@ def main():
 
     audio = proj / "audio"
     has_music = audio.is_dir() and any(f.stem.lower() == "music" for f in audio.iterdir())
+    mood_now = None
+    try:
+        mood_now = json.loads((proj / "config.json").read_text(encoding="utf-8")).get("music_mood")
+        side = audio / "music_mood.txt"
+        if has_music and mood_now and side.exists() and side.read_text(encoding="utf-8").strip() != mood_now and any(f.name == "music.wav" for f in audio.iterdir()):
+            print("music mood changed (%s -> %s): the generated track is made again" % (side.read_text(encoding="utf-8").strip(), mood_now))
+            has_music = False      # only our own generated music.wav is replaced; a user's music.mp3 is never touched
+    except Exception:
+        pass
     if has_music:
         stages.append(("music", None, "audio/music.* exists"))
     else:

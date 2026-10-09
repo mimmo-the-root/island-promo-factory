@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import os
@@ -14,8 +15,8 @@ from pathlib import Path
 # Usage:
 #   python factory.py                 full run (needs ComfyUI)
 #   python factory.py --title "NAME"  override the map title
-#   python factory.py --conform       case "make my thumbnail conform": keeps YOUR landscape files
-#                                     (final/thumbnail_horizontal*.png), builds portrait (plan B: clean
+#   python factory.py --conform       case "make my thumbnail conform": keeps YOUR art-only landscape, puts the kit's title on it
+#                                     (config conform_keep_title: true = keep your own title), builds portrait (plan B: clean
 #                                     background + extracted hero, no Qwen), logo and lobby background
 #   python factory.py --no-qwen       skip Qwen: rebuild lobby, vertical
 #                                     background, title and thumbnails from
@@ -226,7 +227,14 @@ def main():
     start_log()
     promo_project.normalize_background()
     args = sys.argv[1:]
-    conform = "--conform" in args
+    try:
+        _case = json.loads((TEST_PROJECT / "config.json").read_text(encoding="utf-8")).get("case")
+    except Exception:
+        _case = None
+    # a map in the conform case (set by conform.py) never gets new Qwen artwork by accident: --standard forces the normal flow
+    conform = "--conform" in args or (_case == "conform" and "--standard" not in args)
+    if conform and "--conform" not in args:
+        print("This map is in the conform case: keeping your own landscape art (use --standard for the normal generated artwork).")
     no_qwen = "--no-qwen" in args or conform
 
     title_args = []
@@ -254,6 +262,11 @@ def main():
         # art-only landscape stands in for it, and the two files are put back untouched at the end.
         art_only = FINAL_DIR / "thumbnail_horizontal.png"
         with_title = FINAL_DIR / "thumbnail_horizontal_title.png"
+        keep0 = TEST_PROJECT / "final" / "_conform_keep"
+        for _f in (art_only, with_title):          # a previous run may have archived them: take them back from the saved copy
+            if not _f.exists() and (keep0 / _f.name).exists():
+                shutil.copy2(keep0 / _f.name, _f)
+                print("restored %s from final/_conform_keep" % _f.name)
         if not art_only.exists() or not with_title.exists():
             fail("Conform: run the landscape steps first (conform.py landscape and art): %s / %s missing" % (with_title.name, art_only.name))
         keep_dir = TEST_PROJECT / "final" / "_conform_keep"
@@ -261,8 +274,25 @@ def main():
         shutil.copy2(art_only, keep_dir / art_only.name)
         shutil.copy2(with_title, keep_dir / with_title.name)
         shutil.copy2(art_only, FINAL_DIR / "artwork.png")
-        os.environ.setdefault("PROMO_PLAN_B", "bust")
-        os.environ["PROMO_CONFORM"] = "1"
+        # Landscape WITH text: by default it is rebuilt from the art-only image with the KIT's title (same style and font as the portrait and
+        # the logo, placed in the portal's safe area). config.json "conform_keep_title": true keeps the title drawn in the user's own thumbnail.
+        try:
+            _c = json.loads((TEST_PROJECT / "config.json").read_text(encoding="utf-8"))
+        except Exception:
+            _c = {}
+        keep_own_title = _c.get("conform_keep_title") is True
+        if not keep_own_title:
+            os.environ["PROMO_FIT_TITLE"] = "1"      # thumbnail_factory puts the kit's title in the least busy spot of the safe area
+        shutil.copy2(with_title, FINAL_DIR / "thumbnail_horizontal_own_title.png")        # your own version, kept for reference (not in the pack)
+        if keep_own_title:
+            os.environ["PROMO_CONFORM"] = "1"      # the user's own title is not judged against the kit's safe area
+        try:
+            _complete = bool((_c.get("characters") or [{}])[0].get("complete"))
+        except Exception:
+            _complete = False
+        # complete hero -> full figure pasted into the portrait; hero cut by the picture border -> bust version
+        os.environ["PROMO_PLAN_B"] = "direct" if _complete else "bust"
+        print("Portrait: %s version of the hero" % ("full-figure" if _complete else "bust"))
 
     if not no_qwen:
         check_comfyui()
@@ -325,9 +355,10 @@ def main():
     )
 
     if conform:
-        for n in ("thumbnail_horizontal.png", "thumbnail_horizontal_title.png"):
+        for n in ("thumbnail_horizontal.png",) + (("thumbnail_horizontal_title.png",) if keep_own_title else ()):
             shutil.copy2(keep_dir / n, FINAL_DIR / n)
-        print("\nConform: your own landscape thumbnails were put back unchanged.")
+        print("\nConform: landscape art only = yours, unchanged; landscape with text = %s." %
+              ("your own title, unchanged (conform_keep_title)" if keep_own_title else "the art-only image with the kit's title (your own version: final/thumbnail_horizontal_own_title.png)"))
 
     # 8. Validate every required output.
     run_script(VALIDATOR)

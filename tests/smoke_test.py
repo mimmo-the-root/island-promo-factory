@@ -229,8 +229,20 @@ def main():
     rc, out = run(py, ["scripts/conform.py", "landscape", "--project", "c1"], dict(env, PROMO_PROJECTS_DIR=str(cp.parent)), root)
     check(rc == 0 and Image.open(cp / "final" / "thumbnail_horizontal_title.png").size == (1920, 1080), "conform.py makes a 1920x1080 landscape from a 1376x752 thumbnail")
     Image.new("RGB", (1392, 752), (20, 20, 40)).save(cp / "final" / "_untitle_raw.png")
+    rc, out = run(py, ["scripts/conform.py", "art", "--project", "c1", "--qwen"], dict(env, PROMO_PROJECTS_DIR=str(cp.parent)), root)
+    check(rc == 0 and Image.open(cp / "final" / "thumbnail_horizontal.png").size == (1920, 1080), "conform.py art --qwen fits the Qwen untitle result to 1920x1080")
+    # local title removal: a white title with a dark outline on a purple picture disappears, the rest stays identical
+    from PIL import ImageDraw
+    own = Image.new("RGB", (1920, 1080), (60, 30, 100))
+    ImageDraw.Draw(own).rectangle((900, 700, 1100, 800), fill=(200, 40, 40))      # something that must stay
+    d = ImageDraw.Draw(own)
+    for k in range(8):
+        d.rectangle((420 + k * 130, 60, 420 + k * 130 + 95, 150), fill=(255, 255, 255), outline=(10, 10, 10), width=6)
+    own.save(cp / "final" / "thumbnail_horizontal_title.png")
     rc, out = run(py, ["scripts/conform.py", "art", "--project", "c1"], dict(env, PROMO_PROJECTS_DIR=str(cp.parent)), root)
-    check(rc == 0 and Image.open(cp / "final" / "thumbnail_horizontal.png").size == (1920, 1080), "conform.py art fits the Qwen untitle result to 1920x1080")
+    res = Image.open(cp / "final" / "thumbnail_horizontal.png").convert("RGB")
+    check(rc == 0 and res.getpixel((470, 100))[0] < 150 and res.getpixel((1000, 750)) == (200, 40, 40) and res.getpixel((100, 900)) == (60, 30, 100),
+          "conform.py art erases the title locally (text gone, the rest identical, no Qwen)")
 
     # conform, rest of the chain: hero cut-out, clean background, factory --conform keeps the user's landscape files
     env_c = dict(env, PROMO_PROJECTS_DIR=str(cp.parent))
@@ -245,29 +257,42 @@ def main():
     dr = ImageDraw.Draw(raw)
     dr.ellipse((560, 60, 660, 160), fill=(200, 170, 150))
     dr.rounded_rectangle((520, 160, 700, 520), 30, fill=(150, 70, 50))
-    dr.rectangle((590, 300, 630, 360), fill=(0, 255, 0))                 # a green detail INSIDE the hero must stay
-    dr.rectangle((540, 520, 680, 740), fill=(60, 60, 80))
+    dr.rectangle((560, 300, 640, 380), fill=(0, 255, 0))                 # an enclosed pocket of background colour must be removed
+    dr.rectangle((600, 420, 640, 480), fill=(30, 140, 40))               # a darker green detail of the outfit must stay
+    dr.rectangle((540, 520, 680, 751), fill=(60, 60, 80))        # legs run to the bottom border = a cut hero
     raw.save(c2 / "characters" / "_hero_raw.png")
     rc, out = run(py, ["scripts/conform.py", "hero", "--project", "c2"], env_c, root)
     ch_ = Image.open(c2 / "characters" / "character_01.png")
     al_ = ch_.getchannel("A")
-    check(rc == 0 and ch_.mode == "RGBA" and al_.getpixel((2, 2)) == 0 and al_.getpixel((ch_.width // 2, ch_.height // 2)) == 255,
+    check(rc == 0 and ch_.mode == "RGBA" and al_.getpixel((2, 2)) == 0 and al_.getpixel((121, 321)) == 0 and al_.getpixel((141, 431)) == 255 and al_.getpixel((150, 150)) == 255,
           "conform.py hero cuts the hero out of the flat green render")
+    _cfg = json.loads((c2 / "config.json").read_text(encoding="utf-8"))
+    check(_cfg["characters"][0].get("complete") is False and "CUT" in out, "conform.py hero reports a hero cut by the picture border and records complete=false")
     (c2 / "background" / "_clean_probe.png").write_bytes((c2 / "background" / "background.png").read_bytes())
     Image.new("RGB", (2400, 1200), (10, 60, 20)).save(c2 / "background" / "background_clean.png")
     rc, out = run(py, ["scripts/conform.py", "use-clean", "--project", "c2"], env_c, root)
     check(rc == 0 and (c2 / "background" / "_previous" / "background_source.png").exists()
           and Image.open(c2 / "background" / "background.png").getpixel((5, 5)) == (10, 60, 20), "conform.py use-clean swaps in the clean background and keeps the original")
-    before = {n: (c2 / "final" / n).read_bytes() for n in ("thumbnail_horizontal.png", "thumbnail_horizontal_title.png")}
-    cfg_ = json.loads((c2 / "config.json").read_text(encoding="utf-8")); cfg_["characters"][0]["identity"] = "test hero"
+    before = {n: (c2 / "final" / n).read_bytes() for n in ("thumbnail_horizontal.png",)}
+    own_title = (c2 / "final" / "thumbnail_horizontal_title.png").read_bytes()
+    cfg_ = json.loads((c2 / "config.json").read_text(encoding="utf-8")); cfg_["characters"][0]["identity"] = "test hero"; cfg_["case"] = "conform"   # as conform.py landscape sets it
     (c2 / "config.json").write_text(json.dumps(cfg_), encoding="utf-8")
-    rc, out = run(py, ["scripts/factory.py", "--conform", "--project", "c2"], dict(env_c, PROMO_PLAN_B="bust"), root)
+    rc, out = run(py, ["scripts/factory.py", "--project", "c2"], dict(env_c, PROMO_PLAN_B="bust"), root)
     fin = c2 / "final"
     check(rc == 0 and all((fin / n).read_bytes() == b for n, b in before.items())
           and Image.open(fin / "thumbnail_vertical.png").size == (1440, 1920) and (fin / "island_logo.png").exists()
-          and (c2 / "background" / "lobby_background.png").exists(), "factory.py --conform builds portrait, logo and lobby and keeps the user's landscape files")
+          and (c2 / "background" / "lobby_background.png").exists() and (fin / "thumbnail_horizontal_own_title.png").read_bytes() == own_title
+          and (fin / "thumbnail_horizontal_title.png").read_bytes() != own_title
+          and "conform case" in out, "factory.py on a map in the conform case (no flag) builds portrait, logo and lobby, keeps the user's art-only landscape and puts the kit's title on it")
     if rc != 0:
         print(out[-1500:])
+    rc, out = run(py, ["scripts/intake.py", "--project", "c2", "--init", "--mood", "dark"], env_c, root)
+    rc2, out2 = run(py, ["scripts/music_generator.py", "--seed", "3", "--seconds", "8"], dict(env_c, PROMO_PROJECT="c2"), root)
+    check(json.loads((c2 / "config.json").read_text(encoding="utf-8")).get("music_mood") == "dark" and rc2 == 0 and "mood=dark" in out2
+          and (c2 / "audio" / "music_mood.txt").read_text(encoding="utf-8") == "dark", "music mood is chosen in the config and used by the music generator")
+    rc, out = run(py, ["scripts/conform.py", "status", "--project", "c2"], env_c, root)
+    check(rc == 0 and "DONE  hero cut-out" in out and "NEXT: run_all.py" in out.replace("style + hero identity saved", "") or "NEXT:" in out,
+          "conform.py status lists done steps and the next one")
 
     server.shutdown()
     print("\n%d check(s) failed, %.0f s" % (len(FAILS), time.time() - t0))
