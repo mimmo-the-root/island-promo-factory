@@ -80,6 +80,12 @@ def get_title():
 
 def split_title(title):
 
+    # "MAIN TITLE | Subtitle": the bar is a separator, not a drawn character
+    if "|" in title:
+        parts = [p.strip() for p in title.split("|") if p.strip()]
+        if len(parts) >= 2:
+            return [parts[0], " ".join(parts[1:])]
+
     words = title.split()
 
     if len(words) <= 2:

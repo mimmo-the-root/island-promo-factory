@@ -104,13 +104,13 @@ const fmt=s=>{s=Math.max(0,Math.round(s));const m=Math.floor(s/60);return m+":"+
 const esc=t=>t.replace(/&/g,"&amp;").replace(/</g,"&lt;");
 function cls(l){if(/FAILED|ERROR|Traceback/.test(l))return"bad";if(/WARNING/.test(l))return"wr";if(/^\s*(---|=+)|RUNNING:/.test(l))return"hd";if(/SUCCESS|OK:|READY|done|PASS|written/.test(l))return"ok";return""}
 async function tick(){try{const d=await (await fetch("/api/status")).json();const st=d.state||"idle";
-$("map").textContent=d.map||"";$("badge").className="badge "+st;$("btxt").textContent=st==="running"?"RUNNING":st==="done"?"COMPLETE":st==="failed"?"FAILED":"IDLE";
+$("map").textContent=d.map||"";$("badge").className="badge "+st;$("btxt").textContent=st==="running"?"RUNNING":st==="done"?(d.kind==="activity"?"STEP DONE":"COMPLETE"):st==="failed"?"FAILED":"IDLE";
 $("pct").textContent=Math.round((d.pct||0)*100)+"%";$("el").textContent=fmt(d.elapsed||d.total||0);
 $("eta").textContent=st==="running"?(d.eta==null?"--:--":"~"+fmt(d.eta)):st==="done"?"0:00":"--:--";
 const runSt=(d.stages||[]).filter(s=>s.state!=="skipped"),tot=runSt.reduce((a,s)=>a+(s.expected||30),0)||1;
 $("bar").innerHTML=runSt.map(s=>{const f=s.state==="running"?Math.round((s.prog||0)*100):s.state==="done"?100:0;
 return `<div class="seg ${s.state}" style="flex:${(s.expected||30)/tot}"><div class="f" style="width:${f}%"></div><span>${(s.expected||30)/tot>0.09?s.name.toUpperCase():""}</span></div>`}).join("");
-$("note").textContent=st==="running"?(d.sub||""):st==="done"?"Finished in "+fmt(d.total||0)+" - your files are ready below.":st==="failed"?"Stopped at '"+(d.failed||"?")+"' - the red lines in the log say why.":"";
+$("note").textContent=st==="running"?(d.sub||""):st==="done"?(d.kind==="activity"?"Step finished in "+fmt(d.total||0)+". Waiting for the next one.":"Finished in "+fmt(d.total||0)+" - your files are ready below."):st==="failed"?"Stopped at '"+(d.failed||"?")+"' - the red lines in the log say why.":"";
 $("nodes").innerHTML=(d.stages||[]).map(s=>`<div class="node ${s.state}"><span class="d"></span><div><b>${s.name}</b><br><small>${s.state==="skipped"?(s.note||"skipped"):s.state==="running"?(s.sub||"working..."):s.state==="pending"?"waiting":s.state==="failed"?"failed":"done"}</small></div><time>${s.state==="running"?fmt(s.live||0):s.state==="done"||s.state==="failed"?fmt(s.seconds||0):""}</time></div>`).join("");
 const lg=$("log"),near=lg.scrollHeight-lg.scrollTop-lg.clientHeight<60;lg.innerHTML=(d.log||[]).map(l=>`<div class="${cls(l)}">${esc(l)}</div>`).join("");if(near)lg.scrollTop=lg.scrollHeight;
 if(d.latest){const key=d.latest.rel+"@"+d.latest.mtime;if(key!==lastLive){lastLive=key;const im=$("live");im.src="/img?rel="+encodeURIComponent(d.latest.rel)+"&t="+d.latest.mtime;im.hidden=false;$("lph").hidden=true;$("ltag").hidden=false;$("ltag").textContent=d.latest.name}}
@@ -236,6 +236,33 @@ def compute(proj, log_lines, d):
     return d
 
 
+def read_status(proj):
+    """run_status.json of this map; an activity session whose wrapper died (no heartbeat) is reported as interrupted."""
+    d = {}
+    try:
+        d = json.loads((proj / "final" / "run_status.json").read_text(encoding="utf-8"))
+    except Exception:
+        return d
+    if d.get("kind") == "activity" and d.get("state") == "running" and time.time() - d.get("updated", 0) > 90:
+        d["state"], d["failed"] = "failed", "interrupted"
+        for s in d.get("stages", []):
+            if s.get("state") == "running":
+                s["state"] = "failed"
+    return d
+
+
+def log_lines_for(proj, status):
+    """The log that belongs to THIS map: its activity log for single steps, last_run_all.log only when this map has a full run."""
+    try:
+        if status.get("kind") == "activity" or not status:
+            f = proj / "final" / "activity.log"
+        else:
+            f = ROOT / "last_run_all.log"
+        return f.read_text(encoding="utf-8", errors="replace").splitlines()
+    except Exception:
+        return []
+
+
 def make_handler(proj):
     pack = proj / "promo_pack"
     status_file = proj / "final" / "run_status.json"
@@ -287,7 +314,7 @@ def make_handler(proj):
                 vs = {n: vstate(n) for n in ("B", "C")}
                 running = any(v.get("state") == "running" for v in vs.values())
                 try:
-                    running = running or json.loads(status_file.read_text(encoding="utf-8")).get("state") == "running"
+                    running = running or read_status(proj).get("state") == "running"
                 except Exception:
                     pass
                 return self.send(200, json.dumps({"variants": vs, "busy": running}).encode("utf-8"), "application/json")
@@ -312,14 +339,8 @@ def make_handler(proj):
                 return self.send(200, json.dumps(V.info(check=False)).encode("utf-8"), "application/json")
             if path == "/api/status":
                 d = {"map": proj.name, "state": "idle", "stages": []}
-                try:
-                    d.update(json.loads(status_file.read_text(encoding="utf-8")))
-                except Exception:
-                    pass
-                try:
-                    lines = log_file.read_text(encoding="utf-8", errors="replace").splitlines()
-                except Exception:
-                    lines = []
+                d.update(read_status(proj))
+                lines = log_lines_for(proj, read_status(proj))
                 d["log"] = lines[-80:]
                 try:
                     compute(proj, lines, d)
@@ -375,7 +396,7 @@ def make_handler(proj):
                 return self.send(400, b"bad variant", "text/plain")
             busy = any(p.poll() is None for p in procs.values())
             try:
-                busy = busy or json.loads(status_file.read_text(encoding="utf-8")).get("state") == "running"
+                busy = busy or read_status(proj).get("state") == "running"
             except Exception:
                 pass
             if busy:
@@ -427,7 +448,7 @@ def serve(proj, port=8765, open_browser=True, block=False):
 def busy(proj):
     """True while a run or a variant is generating: the console must stay up."""
     try:
-        if json.loads((proj / "final" / "run_status.json").read_text(encoding="utf-8")).get("state") == "running":
+        if read_status(proj).get("state") == "running":
             return True
     except Exception:
         pass

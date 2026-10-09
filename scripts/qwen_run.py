@@ -4,6 +4,8 @@ Usage: python qwen_run.py <mode>
   horizontal  background(+clean) + character_01 -> final/artwork.png            (16:9, ONE character)
   vertical    background_vertical + character_01 -> final/artwork_vertical.png (3:4,  ONE character)
   clean       background -> background/background_clean.png (removes unwanted objects)
+  untitle     final/thumbnail_horizontal_title.png (a finished thumbnail) -> final/_untitle_raw.png (removes ONLY the text; characters stay)
+              (case "make my thumbnail conform"; then `conform.py art` makes final/thumbnail_horizontal.png)
 
 Prompts: Resources/prompts/qwen_{prompt,negative}_<mode>.txt (a file with the same
 name inside the project folder overrides it). Horizontal uses the project's
@@ -345,8 +347,8 @@ def extra_objects(art_path, bg_path, scale=8, grow=3, thr=60):
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    if mode not in ("horizontal", "vertical", "clean"):
-        cc.fail("usage: qwen_run.py horizontal|vertical|clean")
+    if mode not in ("horizontal", "vertical", "clean", "untitle"):
+        cc.fail("usage: qwen_run.py horizontal|vertical|clean|untitle")
 
     project = pp.project_dir()
     bg_dir = project / "background"
@@ -393,6 +395,12 @@ def main():
         output = final_dir / "artwork_vertical.png"
         runs, label, prefix = final_dir / "_runs", "artwork_vertical", "Qwen_Vertical_OneCharacter"
         needs_character = True
+    elif mode == "untitle":
+        background = final_dir / "thumbnail_horizontal_title.png"
+        prompt_text = pp.load_prompt("qwen_prompt_untitle.txt")
+        output = final_dir / "_untitle_raw.png"
+        runs, label, prefix = final_dir / "_runs", "untitle", "Qwen_Untitle"
+        needs_character = False
     else:
         background = bg_dir / "background.png"
         prompt_text = pp.load_prompt("qwen_prompt_clean_background.txt")
@@ -400,7 +408,7 @@ def main():
         runs, label, prefix = bg_dir / "_runs", "background_clean", "Qwen_BackgroundClean"
         needs_character = False
 
-    negative = pp.load_prompt(f"qwen_negative_{mode if mode != 'clean' else 'clean_background'}.txt")
+    negative = pp.load_prompt(f"qwen_negative_{ {'clean': 'clean_background'}.get(mode, mode) }.txt")
     workflow_file = pp.workflow_path()
 
     needed = [workflow_file, background] + ([character] if needs_character else [])

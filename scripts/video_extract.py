@@ -161,6 +161,8 @@ def main():
     ap.add_argument("--gameplay-montage", action="store_true", help="join the best moments into the gameplay video")
     ap.add_argument("--gameplay-polish", action="store_true",
                     help="montage with colour grade, zoom, speed changes, beat-synced transitions and our own music (original audio removed)")
+    ap.add_argument("--gameplay-scenes", type=int, default=0, metavar="N",
+                    help="gameplay video as N (2 or 3) real scenes from the best moments, soft dissolves, the look's grade, our music instead of the original audio")
     ap.add_argument("--gameplay-look", choices=["cinematic", "hype"], default="cinematic", help="look of the polished montage")
     ap.add_argument("--music-seed", type=int, default=None, help="seed of the generated gameplay music (default: from the map name)")
     args = ap.parse_args()
@@ -186,7 +188,8 @@ def main():
     else:
         sel = json.loads(Path(args.selection).read_text(encoding="utf-8"))
 
-    polish = bool(args.gameplay_polish or (sel.get("gameplay") or {}).get("polish"))
+    scenes = int(args.gameplay_scenes or (sel.get("gameplay") or {}).get("scenes", 0))
+    polish = bool(args.gameplay_polish or scenes or (sel.get("gameplay") or {}).get("polish"))
     montage = bool(args.gameplay_montage or (sel.get("gameplay") or {}).get("montage"))
     mont_segs = None
     polish_moments = None
@@ -199,7 +202,7 @@ def main():
             if all(c["end"] <= a or c["start"] >= b for a, b in polish_moments):
                 polish_moments.append((c["start"], c["end"]))
         polish_seconds = (sel.get("gameplay") or {}).get("seconds", args.gameplay_seconds)
-        sel["gameplay"] = {"polish": True, "seconds": polish_seconds}
+        sel["gameplay"] = {"polish": True, "seconds": polish_seconds, **({"scenes": scenes} if scenes else {})}
         montage = False
     elif montage:
         total = (sel.get("gameplay") or {}).get("seconds", args.gameplay_seconds)
@@ -265,11 +268,18 @@ def main():
         if polish and polish_moments:
             import gameplay_polish as gpol
             seed = args.music_seed if args.music_seed is not None else sum(map(ord, pp.project_name())) % 100000
-            info_p = gpol.build(ffmpeg, video, polish_moments, polish_seconds, dest,
-                                pp.project_dir() / "audio" / "gameplay_music.wav", seed, info["duration"], args.gameplay_look)
-            print("gameplay: %s MONTAGE of %d real segments (grade, zoom, speed changes, beat-synced cuts), original audio "
-                  "replaced by our generated music -> %s" % (args.gameplay_look.upper(), len(info_p["segments"]), dest))
-            meta = {"mode": "montage", "polished": True, "source": video.name, **info_p}
+            if scenes:
+                info_p = gpol.build_scenes(ffmpeg, video, polish_moments, polish_seconds, dest,
+                                           pp.project_dir() / "audio" / "gameplay_music.wav", seed, info["duration"], scenes, args.gameplay_look)
+                print("gameplay: %d REAL SCENES (%s grade, normal speed, soft dissolves), original audio replaced by our generated music -> %s"
+                      % (len(info_p["segments"]), args.gameplay_look.upper(), dest))
+                meta = {"mode": "scenes", "polished": True, "source": video.name, **info_p}
+            else:
+                info_p = gpol.build(ffmpeg, video, polish_moments, polish_seconds, dest,
+                                    pp.project_dir() / "audio" / "gameplay_music.wav", seed, info["duration"], args.gameplay_look)
+                print("gameplay: %s MONTAGE of %d real segments (grade, zoom, speed changes, beat-synced cuts), original audio "
+                      "replaced by our generated music -> %s" % (args.gameplay_look.upper(), len(info_p["segments"]), dest))
+                meta = {"mode": "montage", "polished": True, "source": video.name, **info_p}
         elif mont_segs:
             build_montage(ffmpeg, video, mont_segs, dest)
             print("gameplay: MONTAGE of %d real segments (%s), hard cuts, no effects -> %s" % (

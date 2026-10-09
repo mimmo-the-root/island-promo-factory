@@ -2,7 +2,7 @@
 
 ## With Claude Code (recommended)
 Open this folder in Claude Code. At every start the kit mirrors its skills into `.claude/` and checks GitHub (cached 6 h, silent offline):
-if a newer release exists Claude tells you and offers `/island-update`. That command runs `scripts/update.py` for you. Same technique as the UEFN dream
+if a newer release exists Claude tells you and offers `/promo-update`. That command runs `scripts/update.py` for you. Same technique as the UEFN dream
 bot team kit: a reference copy (`scripts/claude_kit/`) travels with every update, the start-up hook syncs it into `.claude/`, your own settings are kept.
 First time after upgrading from v1.0.0: run `update.bat` once more (or `python scripts/claude_sync.py`) so the hook and skills are installed.
 

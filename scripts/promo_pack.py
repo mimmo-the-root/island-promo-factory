@@ -182,6 +182,13 @@ def main():
         lines += ["", "## Island code", f"- {code}"]
     lines += ["", "## Optional", "- [ ] Create an A/B test with a variant of the thumbnail (new Qwen seed / other title style)"]
     (out / "UPLOAD_CHECKLIST.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    try:                                   # people open final/ and look for the deliverables: say where they are
+        (project / "final").mkdir(exist_ok=True)
+        (project / "final" / "README.txt").write_text(
+            "This folder holds the WORKING files of the kit (art, cuts, logs). Do not upload from here.\n"
+            "The numbered files for the Creator Portal (01_ ... 09_, gameplay and trailer included) are in:\n  %s\n" % out, encoding="utf-8")
+    except OSError:
+        pass
 
     if errors:
         print("\nPROMO PACK INCOMPLETE:")

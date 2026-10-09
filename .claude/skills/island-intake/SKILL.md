@@ -19,7 +19,7 @@ Create the map right away (slug = lowercase title with dashes):
 The command prints the folders. Open the live console now (`PY services.py console --project <slug>`), so the user sees the map from the first minute.
 
 ## 3. Tell the user where each file goes (do not ask for paths)
-Show the ABSOLUTE folder paths printed by intake (the map folder is `Projects/<slug>/`, next to the kit) and say what goes in each. **The file names in the table are only examples: any file name works** (any image format for the images, any video name), say so in your message. Then offer two ways on, in one short sentence: drop the files now and tell you when they are in, **or** leave and come back later - the map is saved, and the next `/island-new` ("continue an existing map") resumes exactly here with the intake check. Wait for the user's answer; do not start any stage without the files:
+Show the ABSOLUTE folder paths printed by intake (the map folder is `Projects/<slug>/`, next to the kit) and say what goes in each. **The file names in the table are only examples: any file name works** (any image format for the images, any video name), say so in your message. Then offer two ways on, in one short sentence: drop the files now and tell you when they are in, **or** leave and come back later - the map is saved, and the next `/promo-pack` ("continue an existing map") resumes exactly here with the intake check. Wait for the user's answer; do not start any stage without the files:
 | What | Put it in | Rule |
 |---|---|---|
 | Environment | `background/` (any name, any image format) | island capture without characters, at least 1920 px wide |

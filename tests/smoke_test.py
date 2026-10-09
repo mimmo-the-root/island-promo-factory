@@ -169,7 +169,7 @@ def main():
     check("already up to date" in out, "claude_sync is idempotent")
     real = Path(__file__).resolve().parent.parent          # the real repo, not the temp copy
     same = not (real / ".claude").exists() or all((real / ".claude" / r).read_bytes() == (real / "scripts" / "claude_kit" / r).read_bytes()
-               for r in ("skills/island-promo/SKILL.md", "skills/island-intake/SKILL.md", "commands/island-new.md"))
+               for r in ("skills/island-promo/SKILL.md", "skills/island-intake/SKILL.md", "commands/promo-pack.md"))
     check(same, ".claude/ in the repo matches scripts/claude_kit/")
     rc, out = run(py, ["scripts/session_start.py"], dict(env2, PROMO_NO_UPDATE_CHECK="1"), root)
     check(rc == 0 and json.loads(out.strip().splitlines()[-1])["hookSpecificOutput"]["hookEventName"] == "SessionStart", "session_start hook prints valid JSON")
@@ -197,6 +197,29 @@ def main():
     rc, out = run(py, ["scripts/update.py", "--root", str(ur), "--rollback", "1.1.0"], env2, root)
     check(rc == 0 and (ur / "VERSION").read_text().strip() == "1.1.0", "rollback to a named version (roll forward) works")
 
+    # claude_sync retires renamed commands
+    rt = tmp / "retire_root"
+    (rt / "scripts").mkdir(parents=True)
+    shutil.copytree(root / "scripts" / "claude_kit", rt / "scripts" / "claude_kit")
+    (rt / ".claude" / "commands").mkdir(parents=True)
+    (rt / ".claude" / "commands" / "island-new.md").write_text("old")
+    rc, out = run(py, ["scripts/claude_sync.py", "--root", str(rt)], env2, root)
+    check(not (rt / ".claude" / "commands" / "island-new.md").exists() and (rt / ".claude" / "commands" / "promo-pack.md").exists(), "claude_sync removes the old command name and installs promo-pack")
+
+    # activity wrapper: a step becomes a running/done stage with its own log
+    ap_ = tmp / "act_projects" / "a1"
+    (ap_ / "final").mkdir(parents=True)
+    (ap_ / "config.json").write_text("{}")
+    (root / "scripts" / "_act_probe.py").write_text("print('probe ok')\n")
+    try:
+        rc, out = run(py, ["scripts/activity.py", "run", "--project", "a1", "--label", "Probe", "--expected", "5", "--", "_act_probe.py"],
+                      dict(env, PROMO_PROJECTS_DIR=str(ap_.parent)), root)
+    finally:
+        (root / "scripts" / "_act_probe.py").unlink()
+    st_ = json.loads((ap_ / "final" / "run_status.json").read_text())
+    check(rc == 0 and st_["kind"] == "activity" and st_["stages"][0]["state"] == "done" and "probe ok" in (ap_ / "final" / "activity.log").read_text(),
+          "activity.py shows a single step as a stage and keeps its own log")
+
     # conform: existing thumbnail -> landscape with text
     cp = tmp / "conf_projects" / "c1"
     (cp / "input").mkdir(parents=True)
@@ -205,6 +228,9 @@ def main():
     (cp / "input" / "thumbnail_original.jpg").write_bytes((cp / "input" / "my old thumb.jpg").read_bytes())
     rc, out = run(py, ["scripts/conform.py", "landscape", "--project", "c1"], dict(env, PROMO_PROJECTS_DIR=str(cp.parent)), root)
     check(rc == 0 and Image.open(cp / "final" / "thumbnail_horizontal_title.png").size == (1920, 1080), "conform.py makes a 1920x1080 landscape from a 1376x752 thumbnail")
+    Image.new("RGB", (1392, 752), (20, 20, 40)).save(cp / "final" / "_untitle_raw.png")
+    rc, out = run(py, ["scripts/conform.py", "art", "--project", "c1"], dict(env, PROMO_PROJECTS_DIR=str(cp.parent)), root)
+    check(rc == 0 and Image.open(cp / "final" / "thumbnail_horizontal.png").size == (1920, 1080), "conform.py art fits the Qwen untitle result to 1920x1080")
 
     server.shutdown()
     print("\n%d check(s) failed, %.0f s" % (len(FAILS), time.time() - t0))

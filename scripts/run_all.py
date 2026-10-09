@@ -90,6 +90,9 @@ def main():
     ap.add_argument("--gameplay-look", choices=["cinematic", "hype", "off"], default="cinematic",
                     help="extra EDITED gameplay video (>=4 real moments, grade, zoom, speed, beat-synced cuts, our own music, original audio removed); "
                          "off = only the unedited portal cut. The portal gameplay.mp4 is always one real, unedited cut.")
+    ap.add_argument("--gameplay-scenes", type=int, default=3, metavar="N",
+                    help="gameplay video (slot 07) = N (2 or 3) real scenes from the best moments, soft dissolves, our music instead of the original audio "
+                         "(default 3; 0 = the longer beat-synced montage of >=4 moments; ignored with --gameplay-look off = one unedited cut with its own audio)")
     ap.add_argument("--review-prompt", action="store_true",
                     help="build the Qwen prompt, open it for editing and wait for Enter before anything starts")
     ap.add_argument("--ui", action="store_true", help="open the live web dashboard (stays open after the run)")
@@ -129,7 +132,12 @@ def main():
         stages.append(("video cut", None, "gameplay.mp4 is up to date (--redo-video to redo)"))
     else:
         sel = proj / "captures" / "selection.json"
-        style = [] if a.gameplay_look == "off" else ["--gameplay-polish", "--gameplay-look", a.gameplay_look]
+        if a.gameplay_look == "off":
+            style = []
+        elif a.gameplay_scenes > 0:
+            style = ["--gameplay-scenes", str(a.gameplay_scenes), "--gameplay-look", a.gameplay_look]
+        else:
+            style = ["--gameplay-polish", "--gameplay-look", a.gameplay_look]
         stages.append(("video analyse", [py, str(SCRIPTS / "video_analyze.py"), str(src)], None))
         if sel.exists():
             stages.append(("video cut", [py, str(SCRIPTS / "video_extract.py"), "--selection", str(sel), str(src)] + style, None))

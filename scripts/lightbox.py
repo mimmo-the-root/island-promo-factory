@@ -2,7 +2,8 @@ import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(_
 """Lightbox: one board with numbered previews of what the kit produced, sizes underneath (a photographer's proof sheet).
 
 Usage: lightbox.py [--cols 3] [--width 2000] [--out PATH]
-Reads Projects/<map>/promo_pack/ (images + videos; real screenshots are left out: this board shows what the kit made),
+Reads Projects/<map>/promo_pack/ (images + videos; the 3 screenshots become ONE tile numbered like their files, e.g. 09),
+each tile carries the number of its file (01..09) so you can say "upload 01, 03, 07",
 writes promo_pack/lightbox.png. Same look as the live console. Use it to show the results without publishing the full-size
 files, or to pick the numbers you want to upload.
 """
@@ -26,7 +27,6 @@ TXT = (233, 235, 245)
 DIM = (124, 130, 156)
 C1, C2, C3 = (34, 225, 255), (164, 91, 255), (255, 79, 163)
 OK = (55, 230, 160)
-SKIP = ("screenshot",)  # real captures are not kit output
 
 
 def font(size):
@@ -91,6 +91,26 @@ def rounded_mask(size, r):
     return m
 
 
+def number_of(f, fallback):
+    """Tile number = the number at the start of the file name (01_..., 09_...)."""
+    head = f.name.split("_", 1)[0]
+    return int(head) if head.isdigit() else fallback
+
+
+def screenshot_tile(shots):
+    """One preview image for all screenshots: the first big on the left, the others stacked on the right."""
+    ims = [Image.open(s).convert("RGB") for s in shots[:3]]
+    bw, bh = 1102, 620
+    sw, sh = 550, 309
+    canvas = Image.new("RGB", (bw + 10 + sw, bh), (15, 17, 26))
+    canvas.paste(ims[0].resize((bw, bh), Image.LANCZOS), (0, 0))
+    for k, im in enumerate(ims[1:3]):
+        canvas.paste(im.resize((sw, sh), Image.LANCZOS), (bw + 10, k * (sh + 2)))
+    out = Path(tempfile.gettempdir()) / "lb_screenshots.png"
+    canvas.save(out)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cols", type=int, default=3)
@@ -99,8 +119,16 @@ def main():
     a = ap.parse_args()
 
     pack = pp.project_dir() / "promo_pack"
-    files = sorted([f for f in list(pack.glob("*.png")) + list(pack.glob("*.mp4"))
-                    if f.name != "lightbox.png" and not any(k in f.name.lower() for k in SKIP)])
+    allf = sorted([f for f in list(pack.glob("*.png")) + list(pack.glob("*.mp4")) if f.name != "lightbox.png"])
+    shots = [f for f in allf if "screenshot" in f.name.lower()]
+    files = [f for f in allf if f not in shots]
+    over = {}                                   # tile overrides: number, caption, size text
+    if shots:
+        tri = screenshot_tile(shots)
+        files.append(tri)
+        over[tri] = {"num": number_of(shots[0], len(files)), "label": "SCREENSHOTS (%d)" % len(shots),
+                     "dims": "%d x 1920 x 1080 px" % len(shots), "mb": sum(s.stat().st_size for s in shots) / 1048576.0}
+    files.sort(key=lambda f: over[f]["num"] if f in over else number_of(f, 0))
     if not files:
         raise SystemExit("no files in %s - run the promo pack first" % pack)
     cfg = pp.load_config()
@@ -137,7 +165,7 @@ def main():
     n_vid = sum(1 for f in files if f.suffix == ".mp4")
     right = "KIT LIGHTBOX"
     gradient_text(sheet, (W - pad, 44), right, font(40), anchor="ra")
-    d.text((W - pad, 98), "%d assets  -  %d video  -  v%s  -  %s" % (len(files), n_vid, V.read_version(), time.strftime("%Y-%m-%d")),
+    d.text((W - pad, 98), "%d assets  -  %d video  -  v%s  -  %s" % (len(allf), n_vid, V.read_version(), time.strftime("%Y-%m-%d")),
            font=mono(22), fill=DIM, anchor="ra")
     d.text((W - pad, 130), "pick the numbers you want to upload", font=mono(20), fill=DIM, anchor="ra")
     sheet.paste(gradient(W - 2 * pad, 3), (pad, head - 28))
@@ -161,7 +189,8 @@ def main():
         else:
             im = Image.open(f)
             w, h = im.size
-        mb = f.stat().st_size / 1048576.0
+        ov_ = over.get(f, {})
+        mb = ov_.get("mb", f.stat().st_size / 1048576.0)
         scale = min((cell_w - 28) / w, (box_h - 28) / h)
         tw, th = max(1, int(w * scale)), max(1, int(h * scale))
         t_im = im.convert("RGBA").resize((tw, th), Image.LANCZOS)
@@ -184,9 +213,9 @@ def main():
         pill = gradient(64, 34)
         pm = rounded_mask((64, 34), 17)
         card.paste(pill, (14, 14), pm)
-        cd.text((14 + 32, 14 + 17), "%02d" % (i + 1), font=mono(20), fill=(6, 8, 14), anchor="mm")
-        cd.text((cell_w // 2, box_h + 12), label(f.name), font=font(30), fill=TXT, anchor="ma")
-        cd.text((cell_w // 2, box_h + 56), "%d x %d px%s  |  %.2f MB" % (w, h, extra, mb), font=mono(20), fill=DIM, anchor="ma")
+        cd.text((14 + 32, 14 + 17), "%02d" % ov_.get("num", number_of(f, i + 1)), font=mono(20), fill=(6, 8, 14), anchor="mm")
+        cd.text((cell_w // 2, box_h + 12), ov_.get("label", label(f.name)), font=font(30), fill=TXT, anchor="ma")
+        cd.text((cell_w // 2, box_h + 56), ("%s  |  %.2f MB" % (ov_["dims"], mb)) if ov_ else "%d x %d px%s  |  %.2f MB" % (w, h, extra, mb), font=mono(20), fill=DIM, anchor="ma")
         cd.ellipse([cell_w - 34, 20, cell_w - 22, 32], fill=OK)  # portal spec checked by the promo pack
         # top accent bar and rounded card with border
         card.paste(gradient(cell_w, 4), (0, 0))
@@ -206,7 +235,7 @@ def main():
             if attempt == 4:
                 raise
             time.sleep(1.5)
-    print("lightbox: %s (%dx%d, %d assets)" % (out, sheet.width, sheet.height, len(files)))
+    print("lightbox: %s (%dx%d, %d assets)" % (out, sheet.width, sheet.height, len(allf)))
 
 
 if __name__ == "__main__":

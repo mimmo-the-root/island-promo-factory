@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.1.8 — Commands renamed to /promo-*; conform case: clean background experiment
+
+- **Commands renamed** (you create a promo package, not a new island): `/promo-pack` (was `/island-new`), `/promo-conform` (was `/island-conform`), `/promo-update`, `/promo-console`. The next start-up sync removes the old command files from `.claude/commands/` (backed up in `_update_backup/`).
+- **Where the deliverables are:** `final/` now contains a `README.txt` saying it holds working files and that the numbered files (01-09, gameplay and trailer included) are in `promo_pack/`; the review step opens that folder in Explorer for you.
+- **Kit Lightbox shows the screenshots:** the three screenshots appear as one tile ("SCREENSHOTS (3)") and every tile carries the number of its file (01..09), so you can say which numbers to upload. The asset count counts the real files.
+- **Console shows single steps:** new `scripts/activity.py run ...` wraps any kit script so the live console shows it as a running stage (progress, estimate, the map's own log). The console no longer shows another map's `last_run_all.log` when the map has no full run, and an interrupted step is reported instead of staying "running". The skills use it for the Qwen steps.
+- **Stale console fixed:** a console left running from an older version is restarted automatically the next time the console is opened (the page you saw still showed the old `v1.1.8 · 64f5aae` header because that process predated the update).
+- **Conform case, two Qwen steps (experiments, judged honestly by Claude):** `qwen_run.py untitle` removes ONLY the text from your thumbnail and `conform.py art` makes the portal's landscape art-only image (1920x1080, characters stay); `qwen_run.py clean` removes text and characters to give a clean background for the portrait, and `conform.py background` fits it to 16:9 (raw kept in `background/_previous/`). Prompts come from `Resources/prompts/` or are written per map from what Claude sees.
+
+- **Gameplay video (07) = 2-3 real scenes with our music:** the video is built from the 2-3 best moments of your recording at normal speed (soft dissolves, the look's grade only), and the original audio is replaced by generated music. `--gameplay-scenes N` (default 3; 0 = the old beat-synced montage). `--gameplay-look off` still gives one unedited cut with the original audio (the portal may require real, unedited gameplay).
+
+- **Title with a subtitle:** a title written `MAIN TITLE | Subtitle` is now split into two lines at the bar (the bar is no longer drawn as a stray first character of line 2) in the title and the logo.
+
 ## v1.1.7 — /island-new: new artwork or conform my existing thumbnail
 
 - For a new map `/island-new` asks the second fork after code and title: make new artwork from separate images, or make my existing thumbnail conform (`island-conform`). An existing map with `input/thumbnail_original.*` continues in the conform case.

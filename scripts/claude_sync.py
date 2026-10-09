@@ -3,7 +3,7 @@ import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(_
 
 The reference copy lives in scripts/claude_kit/ (it travels with every update); this script mirrors it into .claude/:
   claude_kit/skills/*/SKILL.md   -> .claude/skills/...      (replaced when different; the old file goes to _update_backup/)
-  claude_kit/commands/*.md       -> .claude/commands/...
+  claude_kit/commands/*.md       -> .claude/commands/...   (retired command names are removed, backed up first)
   claude_kit/settings.json       -> MERGED into .claude/settings.json (your own settings are kept; only our hook entry is added)
 Usage: claude_sync.py [--quiet] [--root DIR]      Prints one line per change; with --quiet only when something changed.
 Run automatically by update.py and by the start-up hook, so a new kit version needs no manual step.
@@ -16,6 +16,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 MARK = "island_session_start"      # identifies our hook entry inside settings.json
+RETIRED = ("commands/island-new.md", "commands/island-conform.md", "commands/island-update.md", "commands/island-console.md")  # renamed to promo-*
 
 
 def sync(root, quiet=False):
@@ -44,6 +45,13 @@ def sync(root, quiet=False):
                 changes.append("added %s" % rel.as_posix())
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
+    for rel in RETIRED:                       # old command names: backed up, then removed (the kit owns these files)
+        old = dst / rel
+        if old.is_file():
+            (backup / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(old, backup / rel)
+            old.unlink()
+            changes.append("removed %s (renamed)" % rel)
     ours = json.loads((kit / "settings.json").read_text(encoding="utf-8")) if (kit / "settings.json").exists() else {}
     if ours:
         st_path = dst / "settings.json"

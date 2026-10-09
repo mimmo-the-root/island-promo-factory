@@ -6,6 +6,7 @@ edited: the original audio is removed and replaced by a track synthesised by mus
 material). Check Epic's current rules before uploading edited footage as the portal gameplay video.
 
 build(ffmpeg, video, moments, total_seconds, dest, music_path, seed, source_duration, style='cinematic') -> info dict
+build_scenes(..., n=3, style=...)  -> 2-3 real scenes, soft dissolves, same grade, music instead of the original audio
 """
 import subprocess
 import sys
@@ -157,3 +158,51 @@ def build(ffmpeg, video, moments, total, dest, music_path, seed, source_duration
         _run(cmd)
     return {"segments": [{"start": s, "end": round(s + nd, 3), "speed": sp} for s, nd, sp in segs], "bpm": bpm,
             "seed": seed, "style": style, "seconds": round(out_total, 2), "music": music_path.name}
+
+
+def build_scenes(ffmpeg, video, moments, total, dest, music_path, seed, source_duration, n=3, style="cinematic"):
+    """The portal gameplay video as 2-3 REAL scenes (the best moments), played at normal speed with the look's grade,
+    joined by short dissolves; our generated music replaces the original audio. No speed ramps, no zoom, no bars."""
+    import music_generator as mg
+    n = 2 if int(n) <= 2 else 3
+    look = dict(LOOKS[style], speeds=[1.0], zoom=0.0, letterbox=0, pulse=0.0, grain=min(4, LOOKS[style]["grain"]))
+    total = max(10.0, min(38.0, float(total)))
+    if len(moments) < n:
+        print("ERROR: %d scenes need %d moments, only %d found (run video_analyze.py on a longer recording)" % (n, n, len(moments)))
+        sys.exit(1)
+    ov = 0.6
+    seg_len = (total - ov) / n
+    need = min(seg_len + ov, source_duration)
+    chosen = sorted(moments[:n], key=lambda m: m[0])
+    segs = []
+    for a, b in chosen:
+        centre = (a + b) / 2.0
+        st = max(0.0, min(centre - need / 2.0, source_duration - need))
+        segs.append((round(st, 3), round(need, 3)))
+    buf, bpm, key, prog = mg.generate(seed, total + 1.0, "action")
+    music_path = Path(music_path)
+    music_path.parent.mkdir(parents=True, exist_ok=True)
+    mg.write_wav(music_path, buf)
+    print("scenes: %d real scenes x %.1f s, dissolves %.1f s, total %.1f s, music seed=%d bpm=%d" % (n, seg_len, ov, total, seed, bpm))
+    with tempfile.TemporaryDirectory() as td:
+        parts = []
+        for i, (st, nd) in enumerate(segs):
+            part = Path(td) / ("part%02d.mp4" % i)
+            _render_part(ffmpeg, video, st, nd, 1.0, seg_len + ov, part, True, look)
+            parts.append(part)
+            print("  scene %d/%d  src %.1f-%.1f s" % (i + 1, n, st, st + nd))
+        chain, last = [], "[0:v]"
+        for k in range(1, n):
+            chain.append("%s[%d:v]xfade=transition=dissolve:duration=%.3f:offset=%.3f[x%d]" % (last, k, ov, k * seg_len, k))
+            last = "[x%d]" % k
+        chain.append("%sfade=t=in:st=0:d=0.4,fade=t=out:st=%.3f:d=0.8,format=yuv420p[v]" % (last, total - 0.8))
+        cmd = [ffmpeg, "-v", "error", "-y"]
+        for p_ in parts:
+            cmd += ["-i", str(p_)]
+        cmd += ["-i", str(music_path), "-filter_complex", ";".join(chain), "-map", "[v]", "-map", "%d:a" % n]
+        cmd += pp.h264_args(ffmpeg, 20) + ["-r", "30", "-af", "afade=t=in:st=0:d=0.1,afade=t=out:st=%.3f:d=1.2" % (total - 1.2),
+                                           "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-t", "%.3f" % total,
+                                           "-movflags", "+faststart", str(dest)]
+        _run(cmd)
+    return {"segments": [{"start": s, "end": round(s + nd, 3), "speed": 1.0} for s, nd in segs], "bpm": bpm, "seed": seed,
+            "style": style, "seconds": round(total, 2), "music": music_path.name, "scenes": n}

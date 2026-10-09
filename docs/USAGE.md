@@ -1,7 +1,7 @@
 # Usage
 
 ## Claude as orchestrator (recommended)
-Open this folder in Claude Code and type `/island-new` (or just ask for a new package). Claude starts ComfyUI and the live console by itself (`scripts/services.py`) and runs every step; you never double-click .bat files. The skills in `.claude/skills/` load by themselves:
+Open this folder in Claude Code and type `/promo-pack` (or just ask for a new package). Claude starts ComfyUI and the live console by itself (`scripts/services.py`) and runs every step; you never double-click .bat files. The skills in `.claude/skills/` load by themselves:
 `island-promo` (orchestrator) -> `island-intake` (step 0) -> `island-images` -> `island-video` -> `island-review`.
 Step 0 asks for the island code, the title, the title style and a one-sentence character identity, creates or reuses the map,
 tells you which files to place (`background/background.png`, `characters/character_01.png`, a recording in `captures/gameplay/`)
@@ -10,6 +10,8 @@ writes `RUN_REPORT.md`. One map at a time: the next one starts after you report 
 `intake.py` works without Claude too: `intake.py` lists maps; `intake.py --project <slug> --init --title "T" --island-code 1234-5678-9012` creates one.
 
 ## Look of the videos and screenshots
+`run_all.bat <map> --gameplay-scenes 2|3` (default 3) makes the gameplay video from that many real scenes with generated music (0 = beat-synced montage).
+
 `run_all.bat <map> --gameplay-look cinematic|hype|off` (default cinematic) sets one look for the gameplay video, the trailer clips and the screenshots:
 grade, bloom, vignette; videos add grain, letterbox, push-ins, speed changes and beat-synced transitions. `off` keeps everything unedited.
 The recording's own audio is replaced by generated music (`audio/gameplay_music.wav`, reused by the trailer; your own `audio/music.mp3` wins).

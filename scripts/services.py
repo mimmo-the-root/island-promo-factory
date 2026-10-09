@@ -20,6 +20,7 @@ import webbrowser
 from pathlib import Path
 
 import promo_project as pp
+import version as V
 
 ROOT = pp.ROOT
 COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8188")
@@ -76,10 +77,13 @@ def start_console(slug, port=8765, open_browser=True):
     try:
         info = json.loads(info_file.read_text(encoding="utf-8"))
         if up(info["url"] + "/api/variants"):
-            print("console: already running at %s" % info["url"])
-            if open_browser:
-                webbrowser.open(info["url"])
-            return 0
+            if info.get("version") == V.read_version():
+                print("console: already running at %s" % info["url"])
+                if open_browser:
+                    webbrowser.open(info["url"])
+                return 0
+            print("console: a console of an older version is running (%s): restarting it" % (info.get("version") or "unknown"))
+            stop_console(slug)
     except Exception:
         pass
     log = open(ROOT / "last_console.log", "w", encoding="utf-8")
@@ -96,7 +100,7 @@ def start_console(slug, port=8765, open_browser=True):
             if line.startswith("dashboard: http://"):
                 url = line.split("dashboard: ", 1)[1].strip()
                 if up(url + "/api/variants"):
-                    info_file.write_text(json.dumps({"url": url, "pid": proc.pid, "started": time.time()}), encoding="utf-8")
+                    info_file.write_text(json.dumps({"url": url, "pid": proc.pid, "started": time.time(), "version": V.read_version()}), encoding="utf-8")
                     print("console: %s" % url)
                     if open_browser:
                         webbrowser.open(url)

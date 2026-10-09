@@ -76,7 +76,7 @@ Restart ComfyUI after copying the files. Check each model's licence on its page.
 If a stage fails, open `last_run.log` (images) or `last_run_all.log` (full run).
 
 ## 7. Claude Code (optional, all setups)
-Open the `island-promo-factory` folder in Claude Code and type `/island-new`. Claude asks for the island code, the title and your files, starts ComfyUI and the live console, runs every stage and reviews the results.
+Open the `island-promo-factory` folder in Claude Code and type `/promo-pack`. Claude asks for the island code, the title and your files, starts ComfyUI and the live console, runs every stage and reviews the results.
 The skills and commands are already in the folder (`.claude/`). Without Claude, steps 1-6 and the `.bat` files are all you need.
 
 ## Folder map after installing

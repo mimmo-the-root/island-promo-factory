@@ -1,0 +1,1 @@
+text, letters, title, logo, watermark, caption, new characters, new objects, changed characters, changed pose, blurry, deformed

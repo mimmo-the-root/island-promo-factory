@@ -20,8 +20,8 @@ try:
     latest = V.latest_release()
     tag = (latest or {}).get("tag", "")
     if tag and V.is_newer(tag, cur):
-        msgs.append("Island Promo Factory %s is available (you have v%s). Type /island-update to install it." % (tag, cur))
-        ctx.append("A newer Island Promo Factory release (%s) exists; the installed version is v%s. Offer the user to run /island-update before starting a map." % (tag, cur))
+        msgs.append("Island Promo Factory %s is available (you have v%s). Type /promo-update to install it." % (tag, cur))
+        ctx.append("A newer Island Promo Factory release (%s) exists; the installed version is v%s. Offer the user to run /promo-update before starting a map." % (tag, cur))
     ctx.append("Island Promo Factory v%s. For a new or existing map follow the island-promo skill (step 0 = island-intake). "
                "You run every command yourself: the user must never have to double-click .bat files." % cur)
     out = {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": " ".join(ctx)}}
