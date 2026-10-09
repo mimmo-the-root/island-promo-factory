@@ -232,6 +232,43 @@ def main():
     rc, out = run(py, ["scripts/conform.py", "art", "--project", "c1"], dict(env, PROMO_PROJECTS_DIR=str(cp.parent)), root)
     check(rc == 0 and Image.open(cp / "final" / "thumbnail_horizontal.png").size == (1920, 1080), "conform.py art fits the Qwen untitle result to 1920x1080")
 
+    # conform, rest of the chain: hero cut-out, clean background, factory --conform keeps the user's landscape files
+    env_c = dict(env, PROMO_PROJECTS_DIR=str(cp.parent))
+    rc, out = run(py, ["scripts/new_map.py", "c2", "Conform Test"], env_c, root)
+    c2 = cp.parent / "c2"
+    synth_inputs(c2)
+    (c2 / "characters" / "character_01.png").unlink()
+    (c2 / "final").mkdir(exist_ok=True)
+    Image.new("RGB", (1920, 1080), (70, 20, 90)).save(c2 / "final" / "thumbnail_horizontal_title.png")
+    Image.new("RGB", (1920, 1080), (60, 20, 80)).save(c2 / "final" / "thumbnail_horizontal.png")
+    raw = Image.new("RGB", (1392, 752), (0, 255, 0))
+    dr = ImageDraw.Draw(raw)
+    dr.ellipse((560, 60, 660, 160), fill=(200, 170, 150))
+    dr.rounded_rectangle((520, 160, 700, 520), 30, fill=(150, 70, 50))
+    dr.rectangle((590, 300, 630, 360), fill=(0, 255, 0))                 # a green detail INSIDE the hero must stay
+    dr.rectangle((540, 520, 680, 740), fill=(60, 60, 80))
+    raw.save(c2 / "characters" / "_hero_raw.png")
+    rc, out = run(py, ["scripts/conform.py", "hero", "--project", "c2"], env_c, root)
+    ch_ = Image.open(c2 / "characters" / "character_01.png")
+    al_ = ch_.getchannel("A")
+    check(rc == 0 and ch_.mode == "RGBA" and al_.getpixel((2, 2)) == 0 and al_.getpixel((ch_.width // 2, ch_.height // 2)) == 255,
+          "conform.py hero cuts the hero out of the flat green render")
+    (c2 / "background" / "_clean_probe.png").write_bytes((c2 / "background" / "background.png").read_bytes())
+    Image.new("RGB", (2400, 1200), (10, 60, 20)).save(c2 / "background" / "background_clean.png")
+    rc, out = run(py, ["scripts/conform.py", "use-clean", "--project", "c2"], env_c, root)
+    check(rc == 0 and (c2 / "background" / "_previous" / "background_source.png").exists()
+          and Image.open(c2 / "background" / "background.png").getpixel((5, 5)) == (10, 60, 20), "conform.py use-clean swaps in the clean background and keeps the original")
+    before = {n: (c2 / "final" / n).read_bytes() for n in ("thumbnail_horizontal.png", "thumbnail_horizontal_title.png")}
+    cfg_ = json.loads((c2 / "config.json").read_text(encoding="utf-8")); cfg_["characters"][0]["identity"] = "test hero"
+    (c2 / "config.json").write_text(json.dumps(cfg_), encoding="utf-8")
+    rc, out = run(py, ["scripts/factory.py", "--conform", "--project", "c2"], dict(env_c, PROMO_PLAN_B="bust"), root)
+    fin = c2 / "final"
+    check(rc == 0 and all((fin / n).read_bytes() == b for n, b in before.items())
+          and Image.open(fin / "thumbnail_vertical.png").size == (1440, 1920) and (fin / "island_logo.png").exists()
+          and (c2 / "background" / "lobby_background.png").exists(), "factory.py --conform builds portrait, logo and lobby and keeps the user's landscape files")
+    if rc != 0:
+        print(out[-1500:])
+
     server.shutdown()
     print("\n%d check(s) failed, %.0f s" % (len(FAILS), time.time() - t0))
     if keep:

@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -164,6 +165,9 @@ def main():
             errors.append(error)
 
     for art_only, with_title in TITLE_PAIRS:
+        if os.environ.get("PROMO_CONFORM") == "1" and with_title.name == "thumbnail_horizontal_title.png":
+            print("SKIP: title position of %s (conform case: the title is the user's own design)" % with_title.name)
+            continue
         error = check_title_in_safe_area(art_only, with_title)
         if error:
             errors.append(error)

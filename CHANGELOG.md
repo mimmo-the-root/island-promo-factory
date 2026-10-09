@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.10 — Conform case: the whole package from your own thumbnail
+
+- **Conform case, now the whole package:** after the landscape files, the skill runs on its own: `qwen_run.py hero` (the hero alone on green) + `conform.py hero` (cut-out into `characters/character_01.png`), `conform.py use-clean` (clean background becomes the working background), then `run_all.py --conform` = portrait with/without text (clean background + hero, no Qwen), logo, lobby background, gameplay scenes, trailer, screenshots, promo pack. Your own landscape thumbnails (01/02) are kept untouched. If `input/` holds a single image it is taken as the thumbnail without asking again.
+
 ## v1.1.9 — Title style is chosen from the artwork, not left at the default
 
 - **Title style no longer silently stays SCI_FI:** a new map records `style_chosen: false` until a style is really chosen (`intake.py --style`). `intake.py` warns while the default is still in place, and the intake skill now tells Claude to pick the style from what it sees (HORROR, FIRE, ICE, NEON, GOLD, WHITE; SCI_FI only for tech/space) and to decide as soon as the images are in.

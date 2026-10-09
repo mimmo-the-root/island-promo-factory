@@ -347,8 +347,8 @@ def extra_objects(art_path, bg_path, scale=8, grow=3, thr=60):
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    if mode not in ("horizontal", "vertical", "clean", "untitle"):
-        cc.fail("usage: qwen_run.py horizontal|vertical|clean|untitle")
+    if mode not in ("horizontal", "vertical", "clean", "untitle", "hero"):
+        cc.fail("usage: qwen_run.py horizontal|vertical|clean|untitle|hero")
 
     project = pp.project_dir()
     bg_dir = project / "background"
@@ -395,6 +395,15 @@ def main():
         output = final_dir / "artwork_vertical.png"
         runs, label, prefix = final_dir / "_runs", "artwork_vertical", "Qwen_Vertical_OneCharacter"
         needs_character = True
+    elif mode == "hero":
+        # conform case: the hero alone on flat green, cut out afterwards by conform.py hero
+        background = final_dir / "thumbnail_horizontal_title.png"
+        if not background.exists():
+            background = next(iter(sorted((project / "input").glob("thumbnail_original*"))), background)
+        prompt_text = pp.load_prompt("qwen_prompt_hero.txt")
+        output = project / "characters" / "_hero_raw.png"
+        runs, label, prefix = final_dir / "_runs", "hero", "Qwen_Hero"
+        needs_character = False
     elif mode == "untitle":
         background = final_dir / "thumbnail_horizontal_title.png"
         prompt_text = pp.load_prompt("qwen_prompt_untitle.txt")

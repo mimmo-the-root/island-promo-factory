@@ -14,6 +14,9 @@ from pathlib import Path
 # Usage:
 #   python factory.py                 full run (needs ComfyUI)
 #   python factory.py --title "NAME"  override the map title
+#   python factory.py --conform       case "make my thumbnail conform": keeps YOUR landscape files
+#                                     (final/thumbnail_horizontal*.png), builds portrait (plan B: clean
+#                                     background + extracted hero, no Qwen), logo and lobby background
 #   python factory.py --no-qwen       skip Qwen: rebuild lobby, vertical
 #                                     background, title and thumbnails from
 #                                     the existing final/artwork*.png
@@ -223,7 +226,8 @@ def main():
     start_log()
     promo_project.normalize_background()
     args = sys.argv[1:]
-    no_qwen = "--no-qwen" in args
+    conform = "--conform" in args
+    no_qwen = "--no-qwen" in args or conform
 
     title_args = []
 
@@ -238,11 +242,27 @@ def main():
     print("=" * 64)
     print(" ISLAND PROMO FACTORY - IMAGE PIPELINE")
     print(f" Map:  {promo_project.project_name()}")
-    print(f" Mode: {'COMPOSE ONLY (--no-qwen)' if no_qwen else 'FULL (Qwen + compose)'}")
+    print(f" Mode: {'CONFORM (own landscape files kept, no Qwen)' if conform else 'COMPOSE ONLY (--no-qwen)' if no_qwen else 'FULL (Qwen + compose)'}")
     print("=" * 64)
 
     validate_inputs()
     check_required_scripts(no_qwen)
+
+    keep_dir = None
+    if conform:
+        # The user's own landscape files are the deliverables 01/02: the composer needs an artwork.png to run, so the
+        # art-only landscape stands in for it, and the two files are put back untouched at the end.
+        art_only = FINAL_DIR / "thumbnail_horizontal.png"
+        with_title = FINAL_DIR / "thumbnail_horizontal_title.png"
+        if not art_only.exists() or not with_title.exists():
+            fail("Conform: run the landscape steps first (conform.py landscape and art): %s / %s missing" % (with_title.name, art_only.name))
+        keep_dir = TEST_PROJECT / "final" / "_conform_keep"
+        keep_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(art_only, keep_dir / art_only.name)
+        shutil.copy2(with_title, keep_dir / with_title.name)
+        shutil.copy2(art_only, FINAL_DIR / "artwork.png")
+        os.environ.setdefault("PROMO_PLAN_B", "bust")
+        os.environ["PROMO_CONFORM"] = "1"
 
     if not no_qwen:
         check_comfyui()
@@ -288,6 +308,10 @@ def main():
         # 5b. Optional AI upscale (skips itself when no upscale model is installed).
         run_script(UPSCALE)
 
+    if conform:
+        # Portrait: plan B "bust" = clean background + the extracted hero, no ComfyUI needed.
+        run_script(QWEN_RUN, "vertical", expect=[FINAL_DIR / "artwork_vertical.png"])
+
     # 6. Title layer.
     run_script(TITLE_COMPOSER, *title_args, expect=[TITLE_DIR / "title.png"])
 
@@ -299,6 +323,11 @@ def main():
         THUMBNAIL_FACTORY,
         expect=[FINAL_DIR / name for name in THUMBNAIL_OUTPUTS],
     )
+
+    if conform:
+        for n in ("thumbnail_horizontal.png", "thumbnail_horizontal_title.png"):
+            shutil.copy2(keep_dir / n, FINAL_DIR / n)
+        print("\nConform: your own landscape thumbnails were put back unchanged.")
 
     # 8. Validate every required output.
     run_script(VALIDATOR)

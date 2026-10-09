@@ -83,6 +83,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", default=None)
     ap.add_argument("--no-qwen", action="store_true")
+    ap.add_argument("--conform", action="store_true",
+                    help="case 'make my thumbnail conform': keep the user's own landscape thumbnails (01/02) and build portrait, logo and lobby "
+                         "from the clean background + extracted hero (no Qwen in this stage)")
     ap.add_argument("--redo-video", action="store_true")
     ap.add_argument("--skip-video", action="store_true")
     ap.add_argument("--skip-images", action="store_true", help="keep the current images (no Qwen run); redo only the video stages, promo pack and lightbox")
@@ -114,7 +117,7 @@ def main():
     print("=" * 64)
 
     stages = []  # (name, [cmd], reason-to-skip or None)
-    img = [py, str(SCRIPTS / "factory.py"), "--project", pp.project_name()] + (["--no-qwen"] if a.no_qwen else [])
+    img = [py, str(SCRIPTS / "factory.py"), "--project", pp.project_name()] + (["--no-qwen"] if a.no_qwen else []) + (["--conform"] if a.conform else [])
     stages.append(("images", None if a.skip_images else img, "--skip-images" if a.skip_images else None))
 
     src = None
@@ -156,12 +159,12 @@ def main():
     stages.append(("lightbox", [py, str(SCRIPTS / "lightbox.py")], None))
 
     # expected duration per stage: last successful run of the same kind, else a rough default
-    defaults = {"images": 30 if a.no_qwen else 300, "video analyse": 25, "video cut": 30, "music": 4,
+    defaults = {"images": 30 if (a.no_qwen or a.conform) else 300, "video analyse": 25, "video cut": 30, "music": 4,
                 "trailer": 50, "promo pack": 10, "lightbox": 4}
     prev = {}
     try:
         old_run = json.loads((proj / "final" / "run_timings.json").read_text(encoding="utf-8"))
-        if bool(old_run.get("qwen")) == (not a.no_qwen):
+        if bool(old_run.get("qwen")) == (not (a.no_qwen or a.conform)):
             for t in old_run.get("stages", []):
                 if t.get("status") == "ok" and t.get("seconds", 0) > 0:
                     prev[t["stage"]] = t["seconds"]
@@ -189,7 +192,7 @@ def main():
     status_path.parent.mkdir(parents=True, exist_ok=True)
     t_all = time.time()
     status = {"map": pp.project_name(), "version": V.read_version(), "state": "running", "started": t_all,
-              "qwen": not a.no_qwen,
+              "qwen": not (a.no_qwen or a.conform),
               "stages": [{"name": n, "state": "skipped" if c is None else "pending", "note": sk or "", "seconds": 0,
                           "expected": prev.get(n, defaults.get(n, 30))} for n, c, sk in stages]}
 
@@ -230,7 +233,7 @@ def main():
     print(" %-14s %7s" % ("TOTAL", fmt(total)))
     (proj / "final").mkdir(parents=True, exist_ok=True)
     if not failed:  # keep the last good timings as the baseline for ETA estimates
-      (proj / "final" / "run_timings.json").write_text(json.dumps({"map": pp.project_name(), "total_seconds": round(total, 1), "version": V.read_version(), "qwen": not a.no_qwen,
+      (proj / "final" / "run_timings.json").write_text(json.dumps({"map": pp.project_name(), "total_seconds": round(total, 1), "version": V.read_version(), "qwen": not (a.no_qwen or a.conform),
                                                                  "stages": timings}, indent=2), encoding="utf-8")
     status.update(state="failed" if failed else "done", total=round(total, 1), failed=failed)
     save()
