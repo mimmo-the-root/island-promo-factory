@@ -100,7 +100,7 @@ def main():
     ap.add_argument("--review-prompt", action="store_true",
                     help="build the Qwen prompt, open it for editing and wait for Enter before anything starts")
     ap.add_argument("--ui", action="store_true", help="open the live web dashboard (stays open after the run)")
-    ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--port", type=int, default=None, help="live console port (default 8791, or PROMO_CONSOLE_PORT)")
     a = ap.parse_args()
     if a.project:
         os.environ["PROMO_PROJECT"] = a.project
@@ -108,7 +108,8 @@ def main():
     log = open(ROOT / "last_run_all.log", "w", encoding="utf-8", errors="replace")
     sys.stdout = Tee(sys.__stdout__, log)
     env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
-    env.setdefault("PROMO_PLAN_B", "bust")
+    env.setdefault("PROMO_PLAN_B", pp.plan_b_default())
+    print("Portrait: %s version of the hero (PROMO_PLAN_B=%s)" % ("full-figure" if env["PROMO_PLAN_B"] == "direct" else "bust", env["PROMO_PLAN_B"]))
     py = sys.executable
     proj = pp.project_dir()
     try:

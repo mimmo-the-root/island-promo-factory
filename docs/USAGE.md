@@ -39,7 +39,8 @@ A prompt file with the same name inside `Projects/<map>/` overrides the shared o
 background cleanup (remove unwanted objects). A project copy of `workflows/qwen_workflow_api.json` overrides the shared workflow.
 
 ## Vertical art modes (`PROMO_PLAN_B`)
-- `bust` (default in `run_vertical.bat`): half-body cut-out that fades into the scene, sparks, dark bottom gradient for the title.
+- Default: chosen by itself from the hero (`config.json` `characters[0].complete`, else the cut-out: standing figure whose feet do not touch the bottom edge = `direct`, otherwise `bust`). Force one with `PROMO_PLAN_B=bust|direct`.
+- `bust`: half-body cut-out that fades into the scene, sparks, dark bottom gradient for the title.
   Tune with `PROMO_BUST_CROP` (0.58), `PROMO_BUST_H` (0.52), `PROMO_BUST_TOP` (0.10), `PROMO_CHAR_X` (0.50), `PROMO_EDGE_FEATHER` (70).
 - `direct`: full-body cut-out (`PROMO_CHAR_H` 0.50, `PROMO_CHAR_FEET` 0.66).
 - `1`: composite + Qwen harmonize (experimental: the model may recolor the scene).

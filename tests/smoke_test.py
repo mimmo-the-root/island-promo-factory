@@ -135,6 +135,12 @@ def main():
             print(out[-2500:])
         rc, out = run(py, ["scripts/video_validate.py", str(proj / "final" / "trailer.mp4"), "--kind", "trailer"], env, root)
         check(rc == 0, "trailer passes video_validate")
+        mov = tmp / "trailer_prores.mov"
+        rc, out = run(py, ["-c", "import sys; sys.path.insert(0, 'scripts'); import promo_pack as pk, video_tools as vt; "
+                           "r = pk.make_prores(sys.argv[1], __import__('pathlib').Path(sys.argv[2]), vt.find_tool('ffmpeg', 'FFMPEG_PATH'), vt.find_tool('ffprobe', 'FFPROBE_PATH')); "
+                           "sys.exit(0 if r else 1)", str(proj / "final" / "trailer.mp4"), str(mov)], env, root, timeout=600)
+        pr = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_name,pix_fmt", "-of", "csv=p=0", str(mov)], capture_output=True, text=True).stdout if mov.exists() else ""
+        check(rc == 0 and "prores" in pr and "yuv422p10le" in pr and "pcm_s16le" in pr, "promo_pack exports a ProRes 422 MOV (10-bit, PCM audio) from the trailer")
 
     # demo map + maps stored OUTSIDE the repo (PROMO_PROJECTS_DIR), the layout real users have
     pdir = Path(tmp) / "outside_projects"
@@ -268,6 +274,18 @@ def main():
           "conform.py hero cuts the hero out of the flat green render")
     _cfg = json.loads((c2 / "config.json").read_text(encoding="utf-8"))
     check(_cfg["characters"][0].get("complete") is False and "CUT" in out, "conform.py hero reports a hero cut by the picture border and records complete=false")
+    # a hero that only just touches the border (two thin feet, 12 px wide) must still be reported as cut
+    thin = Image.new("RGB", (1392, 752), (0, 255, 0))
+    dt = ImageDraw.Draw(thin)
+    dt.ellipse((600, 100, 700, 200), fill=(200, 170, 150))
+    dt.rounded_rectangle((570, 200, 730, 600), 30, fill=(150, 70, 50))
+    dt.rectangle((620, 600, 632, 751), fill=(60, 60, 80))
+    dt.rectangle((668, 600, 680, 751), fill=(60, 60, 80))
+    thin.save(c2 / "characters" / "_hero_raw.png")
+    rc, out = run(py, ["scripts/conform.py", "hero", "--project", "c2"], env_c, root)
+    check("CUT" in out and "bottom" in out, "conform.py hero reports a hero whose feet only just touch the bottom border")
+    raw.save(c2 / "characters" / "_hero_raw.png")
+    rc, out = run(py, ["scripts/conform.py", "hero", "--project", "c2"], env_c, root)
     (c2 / "background" / "_clean_probe.png").write_bytes((c2 / "background" / "background.png").read_bytes())
     Image.new("RGB", (2400, 1200), (10, 60, 20)).save(c2 / "background" / "background_clean.png")
     rc, out = run(py, ["scripts/conform.py", "use-clean", "--project", "c2"], env_c, root)
@@ -293,6 +311,24 @@ def main():
     rc, out = run(py, ["scripts/conform.py", "status", "--project", "c2"], env_c, root)
     check(rc == 0 and "DONE  hero cut-out" in out and "NEXT: run_all.py" in out.replace("style + hero identity saved", "") or "NEXT:" in out,
           "conform.py status lists done steps and the next one")
+
+    # portrait mode follows the hero: a full-body cut-out keeps its legs (direct), a cut or half-body hero gets the bust
+    import importlib
+    sys.path.insert(0, str(REPO / "scripts"))
+    ppm = importlib.import_module("promo_project")
+    pb = tmp / "pb"
+    for name, size, feet in (("full", (500, 1100), False), ("cutfeet", (500, 1100), True), ("wide", (1100, 500), False)):
+        d = pb / name
+        (d / "characters").mkdir(parents=True)
+        (d / "config.json").write_text(json.dumps({"characters": [{"file": "characters/character_01.png"}]}), encoding="utf-8")
+        im = Image.new("RGBA", size, (0, 0, 0, 0))
+        ImageDraw.Draw(im).rectangle((size[0] // 4, 20, size[0] * 3 // 4, size[1] - (1 if feet else 40)), fill=(120, 60, 40, 255))
+        im.save(d / "characters" / "character_01.png")
+    modes = {n: ppm.plan_b_default(pb / n) for n in ("full", "cutfeet", "wide")}
+    check(modes == {"full": "direct", "cutfeet": "bust", "wide": "bust"}, "portrait mode: full-body hero = direct (legs kept), feet cut or half body = bust (%s)" % modes)
+    cfg_f = json.loads((pb / "full" / "config.json").read_text()); cfg_f["characters"][0]["complete"] = False
+    (pb / "full" / "config.json").write_text(json.dumps(cfg_f), encoding="utf-8")
+    check(ppm.plan_b_default(pb / "full") == "bust", "portrait mode: complete=false in config.json wins over the image")
 
     server.shutdown()
     print("\n%d check(s) failed, %.0f s" % (len(FAILS), time.time() - t0))

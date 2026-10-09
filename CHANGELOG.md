@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.13 — Full-body hero keeps its legs in the portrait, console port 8791
+
+- **Portrait keeps the legs of a full-body hero:** `run_all` and variants forced the half-body "bust" portrait (fading into the smoke at the thighs) on EVERY map. The mode is now chosen from the hero: a complete full-body cut-out gets the full figure (`direct`), a half body or a figure cut by the border keeps `bust`; `PROMO_PLAN_B` still overrides. The log says which version was used.
+- **Console port changed to 8791:** the live console (and `run_all --ui`) no longer starts on 8765, which another local console uses. Set `PROMO_CONSOLE_PORT` or pass `--port` to choose another; if the port is busy the next free one is used.
+- **`qwen_run.py hero` without a thumbnail:** it can start from `input/character_original.*` (flattened on green), to isolate ONE character from an image that contains several.
+
 ## v1.1.12 — Local title removal, ProRes exports
 
 - **Landscape art-only: the title is erased locally, Qwen no longer repaints the scene:** `conform.py art` now removes only the title letters from your own landscape (the rest stays pixel-identical to your picture). Qwen `untitle` redrew the whole scene on a real map (new moon, different house, softer faces), so it is now an explicit fallback: `conform.py art --qwen`. The result is a soft smear where the title was (the kit title goes on top).

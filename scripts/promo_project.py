@@ -16,6 +16,16 @@ PROMPTS_DIR = ROOT / "Resources" / "prompts"
 WORKFLOWS_DIR = ROOT / "workflows"
 
 
+CONSOLE_PORT_DEFAULT = 8791      # the live console (was 8765, used by another local console); PROMO_CONSOLE_PORT or --port overrides
+
+
+def console_port():
+    try:
+        return int(os.environ.get("PROMO_CONSOLE_PORT", CONSOLE_PORT_DEFAULT))
+    except ValueError:
+        return CONSOLE_PORT_DEFAULT
+
+
 def projects_dir():
     """Where the map folders live: PROMO_PROJECTS_DIR, else a sibling folder ..\\Projects if it exists, else Projects\\ inside this repo."""
     env = os.environ.get("PROMO_PROJECTS_DIR")
@@ -54,6 +64,28 @@ def find_python():
             if c.exists():
                 return c
     return Path(sys.executable)
+
+
+def plan_b_default(proj=None):
+    """Portrait mode for the map's hero: "direct" (full figure, legs included) when the character is complete, else "bust" (half body fading
+    into the scene). complete in config.json (set by conform.py hero) wins; otherwise the cut-out is judged: it must not touch the bottom
+    border (feet) and must be taller than wide (a standing figure). A map used to get "bust" always, which cut the legs of every full-body hero."""
+    proj = Path(proj) if proj else project_dir()
+    try:
+        cfg = json.loads((proj / "config.json").read_text(encoding="utf-8"))
+        chars = cfg.get("characters") or [{}]
+        flag = chars[0].get("complete")
+        if isinstance(flag, bool):
+            return "direct" if flag else "bust"
+        f = proj / chars[0].get("file", "characters/character_01.png")
+        from PIL import Image
+        import numpy as np
+        al = np.array(Image.open(f).convert("RGBA").getchannel("A"))
+        h, w = al.shape
+        feet_cut = int((al[-3:] > 128).sum()) >= 8
+        return "direct" if (not feet_cut and h / w >= 1.3) else "bust"
+    except Exception:
+        return "bust"
 
 
 def project_dir():

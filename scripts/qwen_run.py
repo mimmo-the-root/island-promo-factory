@@ -400,6 +400,18 @@ def main():
         background = final_dir / "thumbnail_horizontal_title.png"
         if not background.exists():
             background = next(iter(sorted((project / "input").glob("thumbnail_original*"))), background)
+        if not background.exists():
+            # no thumbnail: the user's character image (e.g. several characters together) flattened on flat green, to isolate ONE of them
+            src_char = next(iter(sorted(f for f in (project / "input").glob("character_original*") if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"))), None)
+            if src_char is not None:
+                from PIL import Image as _Im
+                _im = _Im.open(src_char).convert("RGBA")
+                _flat = _Im.new("RGBA", _im.size, (0, 255, 0, 255))
+                _flat.alpha_composite(_im)
+                (project / "characters").mkdir(exist_ok=True)
+                background = project / "characters" / "_hero_input.png"
+                _flat.convert("RGB").save(background)
+                print(f"  hero input: {src_char.name} flattened on green")
         prompt_text = pp.load_prompt("qwen_prompt_hero.txt")
         output = project / "characters" / "_hero_raw.png"
         runs, label, prefix = final_dir / "_runs", "hero", "Qwen_Hero"

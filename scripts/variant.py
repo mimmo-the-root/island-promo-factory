@@ -72,7 +72,7 @@ def main():
 
     env = dict(os.environ, PROMO_SEED=str(seed), PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8", PROMO_PROJECT=tmp.name,
                PROMO_PROJECTS_DIR=str(pp.projects_dir()))
-    env.setdefault("PROMO_PLAN_B", "bust")
+    env.setdefault("PROMO_PLAN_B", pp.plan_b_default(src))
     cmd = [sys.executable, str(SCRIPTS / "factory.py"), "--project", tmp.name] + (["--no-qwen"] if a.no_qwen else [])
     status("running", stage="images (seed %d)" % seed)
     with open(log_file, "w", encoding="utf-8", errors="replace") as log:

@@ -1,7 +1,7 @@
 import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(__file__).resolve().parent))  # embedded python ignores script dir
 """Mission-control web console for a Island Promo Factory run (local, read-only).
 
-Usage: dashboard.py [--project SLUG] [--port 8765] [--no-open]     (view the last run of a map)
+Usage: dashboard.py [--project SLUG] [--port 8791] [--no-open]     (view the last run of a map)
        run_all.py --ui                                              (starts it automatically and opens the browser)
 Shows: overall progress bar with % and ETA, the pipeline stages, a live preview of what is being produced
 (finished artwork, the trailer frame being rendered), a gallery of results as they land, a colour-coded live log,
@@ -421,7 +421,8 @@ def make_handler(proj):
     return H
 
 
-def serve(proj, port=8765, open_browser=True, block=False):
+def serve(proj, port=None, open_browser=True, block=False):
+    port = port or pp.console_port()
     for p in range(port, port + 20):
         try:
             srv = ThreadingHTTPServer(("127.0.0.1", p), make_handler(proj))
@@ -468,7 +469,7 @@ def busy(proj):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", default=None)
-    ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--port", type=int, default=pp.console_port())
     ap.add_argument("--no-open", action="store_true")
     ap.add_argument("--idle-min", type=float, default=0,
                     help="exit by itself after this many minutes without any page request and without a run in progress (0 = never)")

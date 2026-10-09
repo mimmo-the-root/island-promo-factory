@@ -67,7 +67,8 @@ def start_comfy(wait=240):
     return 1
 
 
-def start_console(slug, port=8765, open_browser=True):
+def start_console(slug, port=None, open_browser=True):
+    port = port or pp.console_port()
     proj = pp.projects_dir() / slug
     if not (proj / "config.json").exists():
         print("console: map '%s' not found in %s" % (slug, pp.projects_dir()))
@@ -138,7 +139,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("what", choices=["comfy", "console", "stop", "status"])
     ap.add_argument("--project")
-    ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--port", type=int, default=pp.console_port())
     ap.add_argument("--wait", type=int, default=240)
     ap.add_argument("--no-open", action="store_true")
     a = ap.parse_args()
