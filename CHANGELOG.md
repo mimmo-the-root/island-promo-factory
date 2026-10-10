@@ -1,6 +1,10 @@
 # Changelog
 
-## v1.1.14 — Grounded full-figure portrait, --redo-portrait, console stops on exit
+## v1.1.15 — `--redo-all`: rebuild everything without deleting first
+
+- **`--redo-all`: rebuild everything without deleting anything first:** `run_all <map> --redo-all` copies the current `promo_pack/` to `final/_previous/<time>_promo_pack/`, then redoes the portrait art (no-Qwen and conform maps), the gameplay cut, the generated music, the trailer, the pack and the lightbox from the current inputs. Your own landscape art (conform) and your own music file are never touched; `--skip-video` / `--skip-images` still win; without `--no-qwen` a standard map also gets new Qwen artwork as usual.
+
+## v1.1.14 — Automatic exposure lift for dark maps, grounded full-figure portrait, safer ProRes
 
 - **Leaving Claude Code stops the console server:** a new SessionEnd hook (`session_end.py`, installed in `.claude/settings.json` by the start-up sync) closes the live console of every map when you type `/exit` (or Ctrl+C twice / log out). ComfyUI is left running. `PROMO_KEEP_CONSOLE=1` keeps the console open. Open a NEW Claude Code session once after the update so the hook is loaded.
 - **`--redo-portrait`:** `run_all <map> --no-qwen --redo-portrait` rebuilds the portrait art (03/04) with no Qwen: full figure or bust chosen from the hero (the figure's shape is measured, not the file's, so a skin exported with big transparent margins is no longer mistaken for a half body). Plain `--no-qwen` still keeps the existing portrait art; the old one is archived in `final/_previous/`. The full-figure portrait is now bigger and stands on the ground (height 70% of the picture, feet at 96%, was 50% / 66%): the title sits in front of the hero's knees instead of the hero floating above it.

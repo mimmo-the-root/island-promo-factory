@@ -74,3 +74,7 @@ python scripts/trailer_builder.py # uses captures/clips/clip_*.mp4 + island_code
 ## Exposure (dark maps)
 
 `scripts/exposure.py` lifts dark pictures and videos automatically: mean luma >= 85 is left alone, below that a gamma curve raises it towards 95 (images up to gamma 1.9, video up to 1.6; black stays black, nothing clips). It runs on the portrait art, generated landscape art, lobby background, gameplay scenes, trailer clips and screenshots, never on your own landscape art of a conform map. `"exposure": "off"` in `config.json` or `PROMO_EXPOSURE=off` disables it; `"exposure_target": 110` is brighter. Check a file with `python scripts/exposure.py <file>`.
+
+## Rebuild everything: `--redo-all`
+
+`run_all <map> --redo-all` (add `--no-qwen` to skip Qwen) rebuilds the whole package from the current inputs without deleting anything by hand: the old `promo_pack/` is copied to `final/_previous/<time>_promo_pack/` first. Remakes the portrait art, the gameplay cut, the generated music, trailer, pack and lightbox. Your own landscape art (conform) and your own music file are never touched. `--skip-video` keeps the video stages out.

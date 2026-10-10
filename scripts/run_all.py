@@ -1,7 +1,7 @@
 import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(__file__).resolve().parent))  # embedded python ignores script dir
 """Full run for one map: images -> video cut -> music -> trailer -> promo pack -> lightbox, with timings.
 
-Usage: run_all.py [--project SLUG] [--no-qwen [--redo-portrait]] [--redo-video] [--skip-video] [--skip-images] [--seed N]
+Usage: run_all.py [--project SLUG] [--no-qwen [--redo-portrait]] [--redo-video] [--redo-all] [--skip-video] [--skip-images] [--seed N]
 Stages (each is a separate script, so any of them can also be run alone):
   1 images        factory.py            Qwen art, title, logo, thumbnails (skipped Qwen with --no-qwen)
   2 video cut     video_analyze/extract  only if captures/gameplay holds a source recording
@@ -89,6 +89,11 @@ def main():
                     help="case 'make my thumbnail conform': keep the user's own landscape thumbnails (01/02) and build portrait, logo and lobby "
                          "from the clean background + extracted hero (no Qwen in this stage)")
     ap.add_argument("--redo-video", action="store_true")
+    ap.add_argument("--redo-all", action="store_true",
+                    help="rebuild EVERYTHING from the current inputs without deleting anything first: the old promo_pack/ is copied to "
+                         "final/_previous/<time>/, then portrait art (no-Qwen/conform), video cut, generated music, trailer, pack and "
+                         "lightbox are made again. Your own landscape art (conform) and your own music file are never touched. "
+                         "--skip-video / --skip-images still win.")
     ap.add_argument("--skip-video", action="store_true")
     ap.add_argument("--skip-images", action="store_true", help="keep the current images (no Qwen run); redo only the video stages, promo pack and lightbox")
     ap.add_argument("--seed", type=int, default=None)
@@ -119,6 +124,16 @@ def main():
             print("This map is in the conform case: keeping your own landscape art, no new Qwen artwork (--standard forces the normal flow).")
     except Exception:
         pass
+    if a.redo_all:
+        a.redo_video = True
+        a.redo_portrait = True
+        pack = proj / "promo_pack"
+        if pack.is_dir() and any(pack.iterdir()):
+            import shutil
+            import time as _t
+            dest = proj / "final" / "_previous" / (_t.strftime("%Y%m%d_%H%M%S") + "_promo_pack")
+            shutil.copytree(str(pack), str(dest))
+            print("--redo-all: the old promo_pack/ is kept in %s" % dest.relative_to(proj))
     caps = proj / "captures" / "gameplay"
     print("=" * 64)
     import version as V
@@ -167,6 +182,8 @@ def main():
             has_music = False      # only our own generated music.wav is replaced; a user's music.mp3 is never touched
     except Exception:
         pass
+    if a.redo_all and has_music and audio.is_dir() and all(f.name == "music.wav" or f.stem.lower() != "music" for f in audio.iterdir()):
+        has_music = False      # --redo-all: only the GENERATED music.wav is made again, never a music file of the user's
     if has_music:
         stages.append(("music", None, "audio/music.* exists"))
     else:

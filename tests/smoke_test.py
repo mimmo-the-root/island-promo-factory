@@ -355,6 +355,17 @@ def main():
     del os.environ["PROMO_EXPOSURE"]
     check(exposure.eq_filter(1.0) == "" and exposure.eq_filter(1.4).startswith("eq=gamma=1.4"), "exposure: ffmpeg eq filter text")
 
+    # --redo-all: old promo_pack is archived (nothing deleted by hand), the user's own music file is kept
+    ra = tmp / "ra_projects"
+    for sub_ in ("p1/promo_pack", "p1/final", "p1/audio"):
+        (ra / sub_).mkdir(parents=True)
+    (ra / "p1" / "config.json").write_text("{}")
+    (ra / "p1" / "promo_pack" / "01.png").write_text("x")
+    (ra / "p1" / "audio" / "music.mp3").write_text("m")
+    rc, out = run(py, ["scripts/run_all.py", "--project", "p1", "--redo-all", "--skip-images", "--skip-video"], dict(env, PROMO_PROJECTS_DIR=str(ra)), root)
+    arch = list((ra / "p1" / "final" / "_previous").glob("*_promo_pack/01.png"))
+    check(len(arch) == 1 and "old promo_pack/ is kept" in out and "audio/music.* exists" in out, "run_all --redo-all archives the old promo_pack and keeps the user's music")
+
     se = tmp / "se_projects"
     for m in ("m1", "m2"):
         (se / m / "final").mkdir(parents=True)
