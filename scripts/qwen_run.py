@@ -54,14 +54,14 @@ def feather_clipped_edges(char, px):
 def build_plan_b_composite(background_path, character_path, dest):
     """Plan B: paste the original RGBA cut-out at a controlled size/position.
 
-    Env: PROMO_CHAR_H (character height / image height, default 0.50),
-         PROMO_CHAR_FEET (feet y / image height, default 0.66),
+    Env: PROMO_CHAR_H (character height / image height, default 0.70),
+         PROMO_CHAR_FEET (feet y / image height, default 0.96),
          PROMO_CHAR_X (center x / image width, default 0.50).
     """
     from PIL import Image, ImageDraw, ImageFilter
 
-    char_h = float(os.environ.get("PROMO_CHAR_H", "0.50"))
-    feet_y = float(os.environ.get("PROMO_CHAR_FEET", "0.66"))
+    char_h = float(os.environ.get("PROMO_CHAR_H", "0.70"))
+    feet_y = float(os.environ.get("PROMO_CHAR_FEET", "0.96"))
     center_x = float(os.environ.get("PROMO_CHAR_X", "0.50"))
 
     bg = Image.open(background_path).convert("RGBA")
@@ -102,8 +102,8 @@ def build_plan_b_direct(background_path, character_path, dest):
     """
     from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter
 
-    char_h = float(os.environ.get("PROMO_CHAR_H", "0.50"))
-    feet_y = float(os.environ.get("PROMO_CHAR_FEET", "0.66"))
+    char_h = float(os.environ.get("PROMO_CHAR_H", "0.70"))
+    feet_y = float(os.environ.get("PROMO_CHAR_FEET", "0.96"))
     center_x = float(os.environ.get("PROMO_CHAR_X", "0.50"))
 
     bg = Image.open(background_path).convert("RGBA")

@@ -243,6 +243,18 @@ def main():
     print(f"Title layer:        {title.width}x{title.height}")
     print()
 
+    # exposure rules (exposure.py): dark artwork gets a gentle gamma lift BEFORE the title goes on; a conform map keeps the
+    # user's own landscape untouched
+    import exposure
+    import promo_project as _pp
+    if (_pp.load_config() or {}).get("case") != "conform":
+        artwork, g_h = exposure.lift_image(artwork)
+        if g_h > 1.0:
+            print(f"Exposure: horizontal artwork lifted (gamma {g_h:.2f})")
+    artwork_vertical, g_v = exposure.lift_image(artwork_vertical)
+    if g_v > 1.0:
+        print(f"Exposure: vertical artwork lifted (gamma {g_v:.2f})")
+
     horizontal = create_horizontal(artwork)
     save_png(horizontal, HORIZONTAL_FILE)
     save_png(apply_title_horizontal(horizontal, title), HORIZONTAL_TITLE_FILE)

@@ -250,16 +250,18 @@ class VideoShot:
         self.last = None
 
     def _open(self):
+        import exposure
+        g = exposure.video_gamma(self.ffmpeg, self.path, self.offset, (self.duration + 0.5) * self.speed)   # exposure.py rules
         if self.look:
             import gameplay_polish as gpol
             cmd = [self.ffmpeg, "-v", "error", "-ss", "%.3f" % self.offset, "-i", str(self.path),
                    "-t", "%.3f" % ((self.duration + 0.5) * self.speed), "-an",
-                   "-filter_complex", gpol.clip_graph(self.look, self.speed, self.duration + 0.5, self.index % 2 == 0, letterbox=True),
+                   "-filter_complex", gpol.clip_graph(exposure.with_gamma(self.look, g), self.speed, self.duration + 0.5, self.index % 2 == 0, letterbox=True),
                    "-map", "[v]", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]
         else:
             cmd = [self.ffmpeg, "-v", "error", "-ss", "%.3f" % self.offset, "-i", str(self.path),
                    "-t", "%.3f" % (self.duration + 0.5), "-an",
-                   "-vf", "scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d,fps=%d" % (W, H, W, H, FPS),
+                   "-vf", exposure.eq_filter(g) + "scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d,fps=%d" % (W, H, W, H, FPS),
                    "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]
         self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 

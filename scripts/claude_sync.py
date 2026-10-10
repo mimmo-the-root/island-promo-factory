@@ -15,7 +15,7 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-MARK = "island_session_start"      # identifies our hook entry inside settings.json
+MARKS = ("island_session_start", "island_session_end")      # identify our hook entries inside settings.json
 RETIRED = ("commands/island-new.md", "commands/island-conform.md", "commands/island-update.md", "commands/island-console.md")  # renamed to promo-*
 
 
@@ -68,12 +68,13 @@ def sync(root, quiet=False):
                 have = hooks.setdefault(event, [])
                 for entry in entries:
                     blob = json.dumps(entry)
-                    existing = [i for i, e in enumerate(have) if MARK in json.dumps(e)]
+                    mark = entry.get("_id", "")
+                    assert mark in MARKS and mark in blob
+                    existing = [i for i, e in enumerate(have) if mark in json.dumps(e)]
                     if existing:
                         have[existing[0]] = entry          # refresh our own entry
                     else:
                         have.append(entry)
-                    assert MARK in blob
             if json.dumps(cur, sort_keys=True) != before:
                 if st_path.exists():
                     (backup).mkdir(parents=True, exist_ok=True)

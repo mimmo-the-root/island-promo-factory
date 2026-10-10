@@ -106,6 +106,11 @@ def still_graph(look):
 
 
 def _render_part(ffmpeg, video, st, need, speed, out_len, dest, zoom_in, look):
+    import exposure
+    g = exposure.video_gamma(ffmpeg, video, st, need)     # dark segment -> gentle gamma lift (exposure.py rules)
+    if g > 1.0:
+        print("  exposure: gamma %.2f" % g)
+        look = exposure.with_gamma(look, g)
     chain = clip_graph(look, speed, out_len, zoom_in)
     cmd = [ffmpeg, "-v", "error", "-y", "-ss", "%.3f" % st, "-t", "%.3f" % need, "-i", str(video), "-an",
            "-filter_complex", chain, "-map", "[v]", "-t", "%.3f" % out_len] + pp.h264_args(ffmpeg, 15) + ["-r", "30", str(dest)]

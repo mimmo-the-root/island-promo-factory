@@ -80,10 +80,15 @@ def plan_b_default(proj=None):
         f = proj / chars[0].get("file", "characters/character_01.png")
         from PIL import Image
         import numpy as np
-        al = np.array(Image.open(f).convert("RGBA").getchannel("A"))
+        al = np.array(Image.open(f).convert("RGBA").getchannel("A")) > 128
         h, w = al.shape
-        feet_cut = int((al[-3:] > 128).sum()) >= 8
-        return "direct" if (not feet_cut and h / w >= 1.3) else "bust"
+        ys, xs = np.where(al)
+        if len(ys) == 0:
+            return "bust"
+        # judge the FIGURE (its bounding box), not the file: skins are often exported with big transparent margins (860x1033 file, 350x950 figure)
+        fh, fw = int(ys.max() - ys.min() + 1), int(xs.max() - xs.min() + 1)
+        feet_cut = int(al[-3:].sum()) >= 8
+        return "direct" if (not feet_cut and fh / fw >= 1.6) else "bust"
     except Exception:
         return "bust"
 

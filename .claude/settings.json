@@ -12,6 +12,19 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "_id": "island_session_end",
+        "matcher": "prompt_input_exit|logout|other",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PROJECT_DIR}/scripts/py.ps1\" session_end.py",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }

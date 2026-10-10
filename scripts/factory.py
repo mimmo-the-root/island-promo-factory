@@ -18,6 +18,8 @@ from pathlib import Path
 #   python factory.py --conform       case "make my thumbnail conform": keeps YOUR art-only landscape, puts the kit's title on it
 #                                     (config conform_keep_title: true = keep your own title), builds portrait (plan B: clean
 #                                     background + extracted hero, no Qwen), logo and lobby background
+#   python factory.py --no-qwen --redo-portrait   as --no-qwen, and the portrait art (artwork_vertical.png) is rebuilt too
+#                                     (plan B: background + your hero, no Qwen; the old one is archived). Without it the existing portrait art is kept.
 #   python factory.py --no-qwen       skip Qwen: rebuild lobby, vertical
 #                                     background, title and thumbnails from
 #                                     the existing final/artwork*.png
@@ -236,6 +238,7 @@ def main():
     if conform and "--conform" not in args:
         print("This map is in the conform case: keeping your own landscape art (use --standard for the normal generated artwork).")
     no_qwen = "--no-qwen" in args or conform
+    redo_portrait = "--redo-portrait" in args and no_qwen and not conform
 
     title_args = []
 
@@ -298,7 +301,7 @@ def main():
         check_comfyui()
         archive_previous(QWEN_OUTPUTS + THUMBNAIL_OUTPUTS + ["island_logo.png"])
     else:
-        archive_previous(THUMBNAIL_OUTPUTS + ["island_logo.png"])
+        archive_previous(THUMBNAIL_OUTPUTS + ["island_logo.png"] + (["artwork_vertical.png"] if redo_portrait else []))
 
     # 1. Lobby background 2048x1024 (environment only).
     run_script(LOBBY_BACKGROUND, expect=[BACKGROUND_DIR / "lobby_background.png"])
@@ -337,6 +340,16 @@ def main():
 
         # 5b. Optional AI upscale (skips itself when no upscale model is installed).
         run_script(UPSCALE)
+
+    if redo_portrait:
+        # --no-qwen keeps the existing portrait art; --redo-portrait rebuilds it deterministically (plan B, no ComfyUI): full figure or bust by the hero
+        try:
+            import promo_project as _pp
+            os.environ.setdefault("PROMO_PLAN_B", _pp.plan_b_default(TEST_PROJECT))
+        except Exception:
+            os.environ.setdefault("PROMO_PLAN_B", "bust")
+        print("Portrait art rebuilt: %s version of the hero (PROMO_PLAN_B=%s)" % ("full-figure" if os.environ["PROMO_PLAN_B"] == "direct" else "bust", os.environ["PROMO_PLAN_B"]))
+        run_script(QWEN_RUN, "vertical", expect=[FINAL_DIR / "artwork_vertical.png"])
 
     if conform:
         # Portrait: plan B "bust" = clean background + the extracted hero, no ComfyUI needed.

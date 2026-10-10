@@ -324,11 +324,49 @@ def main():
         im = Image.new("RGBA", size, (0, 0, 0, 0))
         ImageDraw.Draw(im).rectangle((size[0] // 4, 20, size[0] * 3 // 4, size[1] - (1 if feet else 40)), fill=(120, 60, 40, 255))
         im.save(d / "characters" / "character_01.png")
-    modes = {n: ppm.plan_b_default(pb / n) for n in ("full", "cutfeet", "wide")}
-    check(modes == {"full": "direct", "cutfeet": "bust", "wide": "bust"}, "portrait mode: full-body hero = direct (legs kept), feet cut or half body = bust (%s)" % modes)
+    d = pb / "margins"          # full-body skin exported with big transparent margins: the file is nearly square, the figure is tall
+    (d / "characters").mkdir(parents=True)
+    (d / "config.json").write_text(json.dumps({"characters": [{"file": "characters/character_01.png"}]}), encoding="utf-8")
+    im = Image.new("RGBA", (860, 1033), (0, 0, 0, 0))
+    ImageDraw.Draw(im).rectangle((250, 50, 600, 990), fill=(120, 60, 40, 255))
+    im.save(d / "characters" / "character_01.png")
+    modes = {n: ppm.plan_b_default(pb / n) for n in ("full", "cutfeet", "wide", "margins")}
+    check(modes == {"full": "direct", "cutfeet": "bust", "wide": "bust", "margins": "direct"}, "portrait mode: full-body hero = direct (legs kept), feet cut or half body = bust (%s)" % modes)
     cfg_f = json.loads((pb / "full" / "config.json").read_text()); cfg_f["characters"][0]["complete"] = False
     (pb / "full" / "config.json").write_text(json.dumps(cfg_f), encoding="utf-8")
     check(ppm.plan_b_default(pb / "full") == "bust", "portrait mode: complete=false in config.json wins over the image")
+
+    # SessionEnd hook: leaving Claude Code stops the live console of every map (a stale console.json is cleaned up, PROMO_KEEP_CONSOLE=1 keeps it)
+    # exposure rules: dark picture is lifted, bright one is left alone, "off" disables, own title/alpha kept
+    sys.path.insert(0, str(root / "scripts"))
+    import exposure
+    from PIL import Image as _I
+    os.environ["PROMO_EXPOSURE"] = "auto"
+    dark = _I.new("RGB", (64, 64), (30, 30, 40))
+    lit, g = exposure.lift_image(dark)
+    check(g > 1.3 and exposure.measure(lit)[0] > exposure.measure(dark)[0] + 25, "exposure: dark picture is lifted (gamma %.2f)" % g)
+    bright = _I.new("RGB", (64, 64), (160, 150, 140))
+    same, g2 = exposure.lift_image(bright)
+    check(g2 == 1.0 and same is bright, "exposure: bright picture is left alone")
+    black = _I.new("RGB", (64, 64), (0, 0, 0))
+    check(exposure.lift_image(black)[0].getpixel((1, 1)) == (0, 0, 0), "exposure: pure black stays black")
+    os.environ["PROMO_EXPOSURE"] = "off"
+    check(exposure.lift_image(dark)[1] == 1.0, "exposure: PROMO_EXPOSURE=off disables the lift")
+    del os.environ["PROMO_EXPOSURE"]
+    check(exposure.eq_filter(1.0) == "" and exposure.eq_filter(1.4).startswith("eq=gamma=1.4"), "exposure: ffmpeg eq filter text")
+
+    se = tmp / "se_projects"
+    for m in ("m1", "m2"):
+        (se / m / "final").mkdir(parents=True)
+        (se / m / "config.json").write_text("{}")
+        (se / m / "final" / "console.json").write_text(json.dumps({"url": "http://127.0.0.1:9", "pid": 0}))
+    rc, out = run(py, ["scripts/session_end.py"], dict(env, PROMO_PROJECTS_DIR=str(se), PROMO_KEEP_CONSOLE="1"), root)
+    check(rc == 0 and (se / "m1" / "final" / "console.json").exists(), "session_end hook keeps the console with PROMO_KEEP_CONSOLE=1")
+    rc, out = run(py, ["scripts/session_end.py"], dict(env, PROMO_PROJECTS_DIR=str(se)), root)
+    check(rc == 0 and not (se / "m1" / "final" / "console.json").exists() and not (se / "m2" / "final" / "console.json").exists(),
+          "session_end hook stops the console of every map on exit")
+    st = json.loads((REPO / "scripts" / "claude_kit" / "settings.json").read_text(encoding="utf-8"))
+    check("island_session_end" in json.dumps(st.get("hooks", {}).get("SessionEnd", [])), "kit settings carry the SessionEnd hook")
 
     server.shutdown()
     print("\n%d check(s) failed, %.0f s" % (len(FAILS), time.time() - t0))

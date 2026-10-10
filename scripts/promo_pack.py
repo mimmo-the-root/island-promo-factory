@@ -59,15 +59,32 @@ def make_prores(src, dest, ffmpeg, ffprobe):
     for prof, pname, mb_s in ((1, "LT", 13.5), (0, "Proxy", 6.0)):
         if prof == 1 and dur * mb_s > 330:
             continue
+        # write to a temp file and move it in place only when it is complete and readable (an interrupted encode must never leave a half file)
+        tmp = dest.with_name(dest.stem + ".part.mov")
         cmd = [str(ffmpeg), "-y", "-v", "error", "-i", str(src), "-c:v", "prores_ks", "-profile:v", str(prof), "-vendor", "apl0",
-               "-pix_fmt", "yuv422p10le", "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2", str(dest)]
+               "-pix_fmt", "yuv422p10le", "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2", str(tmp)]
         r = subprocess.run(cmd, capture_output=True, text=True)
-        if r.returncode != 0 or not dest.exists():
+        ok = r.returncode == 0 and tmp.exists()
+        if ok and ffprobe:
+            pr = subprocess.run([str(ffprobe), "-v", "error", "-show_entries", "format=duration", "-of", "json", str(tmp)], capture_output=True, text=True)
+            try:
+                ok = abs(float(_json.loads(pr.stdout)["format"]["duration"]) - dur) < 0.5
+            except Exception:
+                ok = False
+        if not ok:
             print("WARNING: ProRes export failed for %s: %s" % (dest.name, (r.stderr or "").strip()[-200:]))
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
             return None
-        mb = dest.stat().st_size / 1048576
+        mb = tmp.stat().st_size / 1048576
         if mb < 395:
+            if dest.exists():
+                dest.unlink()
+            tmp.replace(dest)
             return mb, pname
+        tmp.unlink()
     return None
 
 

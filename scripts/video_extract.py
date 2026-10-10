@@ -71,10 +71,14 @@ def screenshot(ffmpeg, video, t, dest_stem, look=None):
         p = Path(d) / "s.png"
         if look:
             import gameplay_polish as gpol
+            import exposure
+            lk = exposure.with_gamma(gpol.LOOKS[look], exposure.video_gamma(ffmpeg, video, max(0.0, t - 0.5), 1.0))
             run([ffmpeg, "-v", "error", "-y", "-ss", "%.3f" % t, "-i", str(video), "-frames:v", "1",
-                 "-filter_complex", gpol.still_graph(gpol.LOOKS[look]), "-map", "[v]", str(p)])
+                 "-filter_complex", gpol.still_graph(lk), "-map", "[v]", str(p)])
         else:
-            run([ffmpeg, "-v", "error", "-y", "-ss", "%.3f" % t, "-i", str(video), "-frames:v", "1", "-vf", VF_FIT, str(p)])
+            import exposure
+            eqf = exposure.eq_filter(exposure.video_gamma(ffmpeg, video, max(0.0, t - 0.5), 1.0))
+            run([ffmpeg, "-v", "error", "-y", "-ss", "%.3f" % t, "-i", str(video), "-frames:v", "1", "-vf", eqf + VF_FIT, str(p)])
         if not p.exists():
             print("ERROR: could not grab a frame at %.1f s" % t)
             sys.exit(1)

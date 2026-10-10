@@ -42,7 +42,7 @@ background cleanup (remove unwanted objects). A project copy of `workflows/qwen_
 - Default: chosen by itself from the hero (`config.json` `characters[0].complete`, else the cut-out: standing figure whose feet do not touch the bottom edge = `direct`, otherwise `bust`). Force one with `PROMO_PLAN_B=bust|direct`.
 - `bust`: half-body cut-out that fades into the scene, sparks, dark bottom gradient for the title.
   Tune with `PROMO_BUST_CROP` (0.58), `PROMO_BUST_H` (0.52), `PROMO_BUST_TOP` (0.10), `PROMO_CHAR_X` (0.50), `PROMO_EDGE_FEATHER` (70).
-- `direct`: full-body cut-out (`PROMO_CHAR_H` 0.50, `PROMO_CHAR_FEET` 0.66).
+- `direct`: full-body cut-out (`PROMO_CHAR_H` 0.70, `PROMO_CHAR_FEET` 0.96 (hero standing on the ground, the title in front of the knees)).
 - `1`: composite + Qwen harmonize (experimental: the model may recolor the scene).
 
 ## Other environment variables
@@ -69,3 +69,8 @@ python scripts/trailer_builder.py # uses captures/clips/clip_*.mp4 + island_code
 - `font not found`: put a font in `Resources/brand/font/` (otherwise the bundled fallback is used).
 - Hard cut on the character edge: use a render with transparent margin on all sides.
 - Never run two instances at once: they lock the same log.
+
+
+## Exposure (dark maps)
+
+`scripts/exposure.py` lifts dark pictures and videos automatically: mean luma >= 85 is left alone, below that a gamma curve raises it towards 95 (images up to gamma 1.9, video up to 1.6; black stays black, nothing clips). It runs on the portrait art, generated landscape art, lobby background, gameplay scenes, trailer clips and screenshots, never on your own landscape art of a conform map. `"exposure": "off"` in `config.json` or `PROMO_EXPOSURE=off` disables it; `"exposure_target": 110` is brighter. Check a file with `python scripts/exposure.py <file>`.

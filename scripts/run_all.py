@@ -1,7 +1,7 @@
 import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(__file__).resolve().parent))  # embedded python ignores script dir
 """Full run for one map: images -> video cut -> music -> trailer -> promo pack -> lightbox, with timings.
 
-Usage: run_all.py [--project SLUG] [--no-qwen] [--redo-video] [--skip-video] [--skip-images] [--seed N]
+Usage: run_all.py [--project SLUG] [--no-qwen [--redo-portrait]] [--redo-video] [--skip-video] [--skip-images] [--seed N]
 Stages (each is a separate script, so any of them can also be run alone):
   1 images        factory.py            Qwen art, title, logo, thumbnails (skipped Qwen with --no-qwen)
   2 video cut     video_analyze/extract  only if captures/gameplay holds a source recording
@@ -83,6 +83,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", default=None)
     ap.add_argument("--no-qwen", action="store_true")
+    ap.add_argument("--redo-portrait", action="store_true", help="with --no-qwen: rebuild the portrait art too (full figure or bust, no Qwen)")
     ap.add_argument("--standard", action="store_true", help="force the normal generated artwork even if the map is in the conform case")
     ap.add_argument("--conform", action="store_true",
                     help="case 'make my thumbnail conform': keep the user's own landscape thumbnails (01/02) and build portrait, logo and lobby "
@@ -125,7 +126,7 @@ def main():
     print("=" * 64)
 
     stages = []  # (name, [cmd], reason-to-skip or None)
-    img = [py, str(SCRIPTS / "factory.py"), "--project", pp.project_name()] + (["--no-qwen"] if a.no_qwen else []) + (["--conform"] if a.conform else []) + (["--standard"] if a.standard else [])
+    img = [py, str(SCRIPTS / "factory.py"), "--project", pp.project_name()] + (["--no-qwen"] if a.no_qwen else []) + (["--redo-portrait"] if a.redo_portrait else []) + (["--conform"] if a.conform else []) + (["--standard"] if a.standard else [])
     stages.append(("images", None if a.skip_images else img, "--skip-images" if a.skip_images else None))
 
     src = None

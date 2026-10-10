@@ -50,6 +50,10 @@ def main():
         source = source.convert("RGB")
         result = resize_cover(source, TARGET_WIDTH, TARGET_HEIGHT)
 
+    import exposure
+    result, g = exposure.lift_image(result)
+    if g > 1.0:
+        print(f"Exposure: dark background lifted (gamma {g:.2f})")
     result.save(OUTPUT, "PNG", optimize=True)
 
     with Image.open(OUTPUT) as check:
