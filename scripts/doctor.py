@@ -75,8 +75,21 @@ def main():
     report("OK" if fonts else "WARN", "brand font: %s" % (fonts[0].name if fonts else "none, the bundled open font is used"),
            "optional: put your licensed title font in Resources\\brand\\font\\ (see the README there)")
     badges = [p for p in (pp.ROOT / "Resources" / "badges").glob("*.png")]
-    report("OK" if badges else "WARN", "video badges (age rating ESRB / Developed in Fortnite): %s" % ("%d file(s)" % len(badges) if badges else "none, the trailer has no badges"),
+    names = [p.name.lower() for p in badges]
+    has_rating = any(n == "rating.png" or n.startswith("esrb") or n.startswith("rating") for n in names)
+    has_fndv = ("developed_in_fortnite.png" in names) or (any("fndv" in n and "white" in n for n in names) and any("fndv" in n and "black" in n for n in names))
+    report("OK" if has_rating else "WARN", "video badge, age rating (ESRB): %s" % ("found" if has_rating else "none, the trailer has no rating badge"),
+           "optional: put the map's rating badge in Resources\\badges\\ as esrb_<rating>.png or rating.png (see the README there)")
+    report("OK" if has_fndv else "WARN", "video badge, Developed in Fortnite: %s" % ("found" if has_fndv else "none, the trailer has no Fortnite badge"),
            "optional: download the official badges and put them in Resources\\badges\\ (see the README there)")
+
+    try:
+        import default_skin
+        n_sk = len(default_skin.list_skins())
+    except Exception:
+        n_sk = 0
+    report("OK" if n_sk else "WARN", "default skins (Resources\\Characters): %s" % ("%d found, a map without a character gets one at random" % n_sk if n_sk else "none"),
+           "optional: download the skin renders from https://brand.epicgames.com/document/469 and put them in Resources\\Characters\\")
 
     # --- projects ---
     pd = pp.projects_dir()

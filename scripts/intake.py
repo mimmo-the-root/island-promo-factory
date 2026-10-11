@@ -196,6 +196,14 @@ def main():
         print("(file names are examples: any name works, Claude renames the files for the kit)\n")
     import os
     os.environ["PROMO_PROJECT"] = slug
+    try:   # no character of its own -> a random skin from Resources/Characters (see default_skin.py)
+        import default_skin
+        picked = default_skin.ensure(proj, log=lambda m: None)
+        if picked:
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            changed.append("default skin: " + picked)
+    except Exception as e:
+        add("WARN", "default skin not applied: %s" % e)
     check_config(proj, cfg)
     check_images(proj, cfg)
     check_video(proj)

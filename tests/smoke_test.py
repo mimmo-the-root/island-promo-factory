@@ -463,6 +463,34 @@ def main():
     check(_gp._ai_montage_track(20.0, 1, adir / "x.wav") is None, "montage: music_engine=synth keeps the old synthesiser path")
     del os.environ["PROMO_MUSIC_ENGINE"]
 
+    # default skin: a map without a character gets a random one from Resources/Characters, a map with its own keeps it
+    import importlib
+    from PIL import Image as _Im
+    sk = tmp / "skins"
+    sk.mkdir()
+    for nm in ("FN 01 Outfit (Skull Trooper).png", "FN 02 Outfit (Funk Ops)(New Glasses).png"):
+        _im = _Im.new("RGBA", (600, 1000), (0, 0, 0, 0))
+        _im.paste((200, 30, 30, 255), (200, 100, 400, 900))
+        _im.save(sk / nm)
+    sp = tmp / "skin_projects"
+    for m in ("nochar", "ownchar"):
+        (sp / m / "characters").mkdir(parents=True)
+        (sp / m / "config.json").write_text(json.dumps({"characters": [{"file": "characters/character_01.png", "identity": "DESCRIBE THE CHARACTER: x"}]}))
+    _Im.new("RGBA", (50, 50), (1, 2, 3, 255)).save(sp / "ownchar" / "characters" / "character_01.png")
+    os.environ.update(PROMO_SKINS_DIR=str(sk), PROMO_SKIN_SEED="7", PROMO_PROJECTS_DIR=str(sp))
+    import default_skin as _ds
+    importlib.reload(_ds)
+    check(len(_ds.list_skins()) == 2 and _ds.skin_name(sk / "FN 02 Outfit (Funk Ops)(New Glasses).png") == ("Funk Ops", ["New Glasses"]), "default skin: lists skins and reads the name")
+    got_sk = _ds.ensure(sp / "nochar", log=lambda m: None)
+    c_sk = json.loads((sp / "nochar" / "config.json").read_text())
+    check(got_sk and (sp / "nochar" / "characters" / "character_01.png").is_file() and c_sk["characters"][0]["default_skin"] == got_sk
+          and "DESCRIBE" not in c_sk["characters"][0]["identity"], "default skin: a map without a character gets a random skin and an identity")
+    check(_ds.ensure(sp / "nochar", log=lambda m: None) is None, "default skin: the pick is kept on later runs")
+    check(_ds.ensure(sp / "ownchar", log=lambda m: None) is None and _Im.open(sp / "ownchar" / "characters" / "character_01.png").size == (50, 50),
+          "default skin: a skin you provide is never replaced")
+    for k in ("PROMO_SKINS_DIR", "PROMO_SKIN_SEED", "PROMO_PROJECTS_DIR"):
+        os.environ.pop(k, None)
+
     se = tmp / "se_projects"
     for m in ("m1", "m2"):
         (se / m / "final").mkdir(parents=True)

@@ -23,7 +23,7 @@ The recording's own audio is replaced by generated music (`audio/gameplay_music.
 
 ## Per-map workflow
 1. `new_map.bat <slug> "TITLE" [--style SCI_FI]`
-2. Add `background/background.png` and `characters/character_01.png`; edit `config.json`.
+2. Add `background/background.png` and `characters/character_01.png` (no character? one of the skins in `Resources/Characters/` (download: https://brand.epicgames.com/document/469) is picked at random and kept: `python scripts/default_skin.py --project <map> --reroll` for another); edit `config.json`.
 3. `run_factory.bat <slug>` (or `python scripts/factory.py --project <slug>`). Flags: `--no-qwen`, `--title "X"`.
 4. `run_vertical.bat <slug>` for the vertical art without AI.
 5. `run_trailer.bat <slug>`.

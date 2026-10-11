@@ -22,6 +22,8 @@ Resources/brand/font/*
 Resources/badges/*
 !Resources/badges/README.txt
 Resources/bin/
+Resources/[Cc]haracters/*
+!Resources/[Cc]haracters/README.txt
 
 __pycache__/
 .env
@@ -40,6 +42,6 @@ ComfyUI_windows_portable/
 ComfyUI_windows_portable_*.7z
 
 # official brand badges (Epic / ESRB): supply your own, never publish
-Resources/brand/uefn/
-Resources/brand/pegi/          # legacy folder from older kits: no longer used, never publish it
+Resources/brand/uefn/          # legacy folders of older kits: the badges now live only in Resources/badges/
+Resources/brand/pegi/
 _releases/

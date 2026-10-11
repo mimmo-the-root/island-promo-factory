@@ -49,6 +49,7 @@ new_map.bat my-map "MY MAP TITLE" --style SCI_FI
 :: put your files in Projects\my-map\
 ::   background\background.png     the environment, no characters, >= 1920 px wide
 ::   characters\character_01.png   ONE character, transparent PNG with margin on all sides
+::                                 (none? a random skin from Resources\Characters is used and kept)
 ::   captures\gameplay\recording.mp4   a 5+ minute recording of your island (optional but recommended)
 :: edit Projects\my-map\config.json  (island_code, title, style, character identity)
 run_all.bat my-map --review-prompt           :: add --no-qwen if you have no ComfyUI
@@ -97,7 +98,7 @@ When the run is done, the promo pack and its numbered preview board (the "Kit Li
 ## Your brand, your files (not included)
 
 - **Font:** drop a `.otf`/`.ttf` in `Resources/brand/font/`. Without one, an open-licensed fallback font is used. Fortnite's Burbank is *not* distributed here.
-- **Badges:** `Resources/badges/rating.png` (the map's ESRB rating; per map in `Projects/<map>/badges/`) and `developed_in_fortnite.png` (or the `FNDV_*_White/Black_*.png` pair) (video only, never distorted). Get the official files from their owners.
+- **Badges:** all in `Resources/badges/` and nowhere else: `esrb_teen.png` (or `rating.png`; the map's ESRB rating, per map in `Projects/<map>/badges/`) and `FNDV_V_White_EN.png` + `FNDV_V_Black_EN.png` (or one `developed_in_fortnite.png`) (video only, never distorted). Get the official files from their owners.
 - **Music:** optional `Projects/<map>/audio/music.mp3`. Use only music you are licensed to use.
 - **Gameplay and screenshots** come from *your* recording. The default look edits them (grade, speed, transitions); the portal may ask for real, unedited gameplay: use `--gameplay-look off` for an unedited cut and check Epic's current rules before uploading.
 

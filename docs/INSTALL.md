@@ -81,8 +81,8 @@ ComfyUI must be recent (`update\update_comfyui.bat`): the ACE-Step 1.5 nodes are
 | File | Folder (inside `island-promo-factory`) | Why |
 |---|---|---|
 | a `.otf`/`.ttf` title font | `Resources\brand\font\` | titles and logo. Without it the bundled open font is used |
-| `rating.png` (or `esrb_teen.png`) | `Resources\badges\` (per map: `Projects\<map>\badges\`) | age-rating badge of the map (ESRB), trailer only |
-| `developed_in_fortnite.png` | `Resources\badges\` | "Developed in Fortnite" badge, trailer only |
+| `esrb_teen.png` (or `rating.png`) | `Resources\badges\` (per map: `Projects\<map>\badges\`) | age-rating badge of the map (ESRB), trailer only |
+| `FNDV_V_White_EN.png` + `FNDV_V_Black_EN.png` (or one `developed_in_fortnite.png`) | `Resources\badges\` | "Developed in Fortnite" badge, trailer only (white and black variant: the trailer picks the one that contrasts). All badges live in this one folder |
 | `music.mp3` (licensed, optional) | `Projects\<map>\audio\` | soundtrack. Without it an original track is generated for you (AI music with ComfyUI + the ACE-Step files, else a built-in synthesiser) |
 
 ## 6. Check that everything works
