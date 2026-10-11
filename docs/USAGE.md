@@ -88,3 +88,4 @@ The trailer and the gameplay video share ONE track, made by the "music" stage of
 - **Your own music** (`audio/music.mp3`) always wins for the trailer. A new track: `--seed N`, or delete `audio/music.wav` (or `/promo-redo`).
 - **GPU:** Qwen (artwork) and ACE-Step (music) run one after the other; the models loaded in ComfyUI are freed before and after the music.
 - **Listening test:** `python scripts\music_ai.py --test --project <map>` writes candidates to `audio/_ai_test/` and changes nothing else.
+- **Beat-synced montage** (`--gameplay-scenes 0`): with AI music the real tempo and first downbeat of the track are measured (`scripts/music_beats.py`), the track is trimmed to start on the downbeat and the cuts are planned on that grid; with the synthesiser the tempo is exact, as before.

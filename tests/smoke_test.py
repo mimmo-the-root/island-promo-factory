@@ -441,14 +441,14 @@ def main():
     # beat-synced montage with AI music: the measured tempo and first downbeat are used, the trimmed track starts on the downbeat
     import music_beats as _mb
     import gameplay_polish as _gp
-    sr_, bpm_, first_ = 44100, 124.0, 0.37
+    sr_, bpm_, first_ = 44100, 150.0, 0.37   # 150 = the tempo asked for the "action" mood (the AI follows the requested tempo closely)
     clk = _np.zeros(sr_ * 40, dtype=_np.float32)
     for k_ in range(int(40 * bpm_ / 60)):
         s_ = int((first_ + k_ * 60 / bpm_) * sr_)
         if s_ + 2000 < len(clk):
             clk[s_:s_ + 2000] += (_np.sin(2 * _np.pi * 60 * _np.arange(2000) / sr_) * _np.exp(-_np.arange(2000) / 500) * (1.0 if k_ % 4 == 0 else 0.6)).astype(_np.float32)
     clk += _np.random.default_rng(0).normal(0, 0.02, len(clk)).astype(_np.float32)
-    mb_bpm, mb_first, _c = _mb.detect(clk, 125.0, sr=sr_)
+    mb_bpm, mb_first, _c = _mb.detect(clk, 150.0, sr=sr_)
     check(abs(mb_bpm - bpm_) < 0.6 and min(abs(mb_first - first_), abs(mb_first - first_ - 4 * 60 / bpm_)) < 0.06, "beats: tempo %.2f and first downbeat %.2f s measured on a click track" % (mb_bpm, mb_first))
     adir = tmp / "mont_audio"
     adir.mkdir()
