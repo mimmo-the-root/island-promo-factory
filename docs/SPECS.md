@@ -13,4 +13,4 @@ Always verify on the Fortnite Creator Portal before uploading: these values chan
 
 Gameplay footage must be real and unedited, including the in-game UI. Epic composes art and logo at display time:
 keep the bottom corners free (like % and New/Updated badges) and keep titles inside a 200 px top/bottom safe area.
-PEGI and "Developed in Fortnite" belong in videos only, not on thumbnails.
+The age-rating (ESRB) and "Developed in Fortnite" belong in videos only, not on thumbnails.

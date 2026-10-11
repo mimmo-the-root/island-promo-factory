@@ -77,4 +77,4 @@ python scripts/trailer_builder.py # uses captures/clips/clip_*.mp4 + island_code
 
 ## Rebuild everything: `--redo-all`
 
-`run_all <map> --redo-all` (add `--no-qwen` to skip Qwen) rebuilds the whole package from the current inputs without deleting anything by hand: the old `promo_pack/` is copied to `final/_previous/<time>_promo_pack/` first. Remakes the portrait art, the gameplay cut, the generated music, trailer, pack and lightbox. Your own landscape art (conform) and your own music file are never touched. `--skip-video` keeps the video stages out.
+`/promo-redo <map>` in Claude Code, or `run_all <map> --redo-all` (add `--no-qwen` to keep the art), rebuilds the whole package from the current inputs: it cleans first (the old promo pack, trailer, logo, lobby background, gameplay cut, screenshots and generated music are MOVED to `final/_previous/<time>_redo/`, nothing is deleted) and then runs the pipeline again. Remakes the portrait art, the gameplay cut, the generated music, trailer, pack and lightbox. Your own landscape art (conform) and your own music file are never touched. `--skip-video` keeps the video stages out.

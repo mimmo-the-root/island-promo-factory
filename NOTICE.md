@@ -8,7 +8,7 @@ island (for licensed franchises, follow the IP holder's brand rules).
 
 ## What is NOT included (supply your own)
 - **Burbank / Fortnite fonts**: not distributed. Place your own licensed font in `Resources/brand/font/`.
-- **PEGI and "Developed in Fortnite" badges**: not distributed. Get the official files from their
+- **ESRB (age rating) and "Developed in Fortnite" badges**: not distributed. Get the official files from their
   owners and place them in `Resources/badges/` (see the README there).
 - **AI models** (Qwen Image Edit, text encoder, VAE, optional upscaler, optional LoRA): download them
   yourself from their official pages and respect each model's licence.

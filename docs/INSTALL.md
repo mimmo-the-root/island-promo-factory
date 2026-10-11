@@ -62,7 +62,7 @@ Restart ComfyUI after copying the files. Check each model's licence on its page.
 | File | Folder (inside `island-promo-factory`) | Why |
 |---|---|---|
 | a `.otf`/`.ttf` title font | `Resources\brand\font\` | titles and logo. Without it the bundled open font is used |
-| `pegi.png` | `Resources\badges\` | PEGI badge, trailer only |
+| `rating.png` (or `esrb_teen.png`) | `Resources\badges\` (per map: `Projects\<map>\badges\`) | age-rating badge of the map (ESRB), trailer only |
 | `developed_in_fortnite.png` | `Resources\badges\` | "Developed in Fortnite" badge, trailer only |
 | `music.mp3` (licensed, optional) | `Projects\<map>\audio\` | soundtrack. Without it an original track is generated for you |
 

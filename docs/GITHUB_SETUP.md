@@ -21,5 +21,5 @@ and a short "setting up" README. Nothing else is staged: check the output of `gi
 .\publish.ps1
 ```
 It runs the version check, commits everything that is not ignored, pushes, tags `v1.0.0` and lets the CI build the Release.
-Before running it, check nothing protected is staged: `git add -A -n | Select-String "Projects/|badges/|pegi|uefn|burbank|ffmpeg|safetensors"`
+Before running it, check nothing protected is staged: `git add -A -n | Select-String "Projects/|badges/|esrb|uefn|burbank|ffmpeg|safetensors"`
 must list only `Projects/.gitkeep` and `Resources/badges/README.txt`.

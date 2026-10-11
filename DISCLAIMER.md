@@ -4,8 +4,7 @@
 sponsored by or approved by Epic Games, Inc., Disney / Lucasfilm, or any other rights holder.
 
 * "Fortnite", "Unreal Editor for Fortnite (UEFN)", "Epic Games", the "Developed in Fortnite" badge and related names and
-  marks are trademarks and/or copyrighted works of Epic Games, Inc. "PEGI" is a trademark of Pan European Game
-  Information. All other names, logos and characters belong to their respective owners. They are mentioned only to
+  marks are trademarks and/or copyrighted works of Epic Games, Inc. "ESRB" is a trademark of the Entertainment Software Association. All other names, logos and characters belong to their respective owners. They are mentioned only to
   describe what the tool is for.
 * **No protected material is distributed.** The repository contains no Epic or franchise artwork, no official badges,
   no Burbank font, no game footage, no music of third parties, no AI model weights and no ffmpeg or ComfyUI binaries. You

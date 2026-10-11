@@ -15,7 +15,7 @@ already at the right size, inside the safe areas, validated and named like the p
 | Island logo | 1440x608 transparent PNG |
 | Lobby background | 2048x1024 PNG |
 | Gameplay video | 1920x1080 MP4, 10-40 s, cinematic montage of your own recording with generated music |
-| Trailer | 1920x1080 MP4, 10-40 s, your real clips, end card, PEGI + "Developed in Fortnite" badges |
+| Trailer | 1920x1080 MP4, 10-40 s, your real clips, end card, age-rating (ESRB) + "Developed in Fortnite" badges |
 | Screenshots (3) | 1920x1080 PNG, graded like the videos |
 
 > Specs reflect the Creator Portal in October 2026. Epic changes them: always check the portal. Details: [docs/SPECS.md](docs/SPECS.md).
@@ -94,7 +94,7 @@ When the run is done, the promo pack and its numbered preview board (the "Kit Li
 ## Your brand, your files (not included)
 
 - **Font:** drop a `.otf`/`.ttf` in `Resources/brand/font/`. Without one, an open-licensed fallback font is used. Fortnite's Burbank is *not* distributed here.
-- **Badges:** `Resources/badges/pegi.png` and `developed_in_fortnite.png` (video only, never distorted). Get the official files from their owners.
+- **Badges:** `Resources/badges/rating.png` (the map's ESRB rating; per map in `Projects/<map>/badges/`) and `developed_in_fortnite.png` (or the `FNDV_*_White/Black_*.png` pair) (video only, never distorted). Get the official files from their owners.
 - **Music:** optional `Projects/<map>/audio/music.mp3`. Use only music you are licensed to use.
 - **Gameplay and screenshots** come from *your* recording. The default look edits them (grade, speed, transitions); the portal may ask for real, unedited gameplay: use `--gameplay-look off` for an unedited cut and check Epic's current rules before uploading.
 
@@ -102,7 +102,7 @@ When the run is done, the promo pack and its numbered preview board (the "Kit Li
 
 `CLAUDE.md` and the skills in `.claude/skills/` describe the commands, folders and rules, so Claude can run the whole loop:
 `island-intake` (step 0: island code, title, assets, READY check), `island-images`, `island-video`, `island-review`, orchestrated by `island-promo`.
-Commands: `/promo-pack` (create or continue the promo package of an island), `/promo-conform` (start from a thumbnail you already have), `/promo-console` (open the live console), `/promo-update` (install the newest release).
+Commands: `/promo-pack` (create or continue the promo package of an island), `/promo-conform` (start from a thumbnail you already have), `/promo-redo` (clean and rebuild a whole map), `/promo-console` (open the live console), `/promo-redo` (clean and rebuild a whole map), `/promo-update` (install the newest release).
 At every session start the kit syncs its skills and tells you when a newer release exists. Details: [docs/USAGE.md](docs/USAGE.md), [docs/UPDATING.md](docs/UPDATING.md).
 
 ## Tuning

@@ -31,6 +31,6 @@ For a NEW map ask, right after island code and title (plain text, one question):
 - Every stage must exit 0 AND create or update its output. On failure: read `last_run_all.log`, fix ONE thing, rerun that stage only.
 - Never delete the user's files: move them to a `_to_delete_*` folder and say so.
 - Debug output behind `PROMO_DEBUG=1`.
-- Legal: never add Epic/Fortnite/third-party art, fonts or badges to the repo; PEGI and "Developed in Fortnite" badges are video-only and never distorted; music is the generated one or the user's own.
+- Legal: never add Epic/Fortnite/third-party art, fonts or badges to the repo; the age-rating (ESRB) and "Developed in Fortnite" badges are video-only and never distorted; music is the generated one or the user's own.
 - The portal's gameplay slot may require real, unedited gameplay. The default look is cinematic (edited); `--gameplay-look off` gives the unedited cut. Tell the user which one is in the pack.
 - Versioning: when you change kit code, bump `VERSION` (`PY release.py bump patch|minor`), fill the CHANGELOG entry, run `PY release.py check` and `PY ../tests/smoke_test.py` before telling the user it is done.

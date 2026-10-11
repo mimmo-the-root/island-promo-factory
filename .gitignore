@@ -39,7 +39,7 @@ last_console.log
 ComfyUI_windows_portable/
 ComfyUI_windows_portable_*.7z
 
-# official brand badges (Epic / PEGI): supply your own, never publish
-Resources/brand/pegi/
+# official brand badges (Epic / ESRB): supply your own, never publish
 Resources/brand/uefn/
+Resources/brand/pegi/          # legacy folder from older kits: no longer used, never publish it
 _releases/

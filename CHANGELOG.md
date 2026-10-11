@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.16 — Age-rating badge (ESRB) replaces PEGI in the videos
+
+- **ESRB instead of PEGI in the trailer:** the left corner badge is now the map's age rating, taken from `rating.png` or any `esrb_*.png` / `rating*.png` in `Projects/<map>/badges/` (per map: the rating differs from map to map) or in `Resources/badges/`. PEGI is gone from the code, the doctor, the skills and every document (README, INSTALL, SPECS, NOTICE, DISCLAIMER); the badge is a little larger (15% of the height instead of 12%) so its text stays legible. The "Developed in Fortnite" logo on the right is unchanged; a TALL file with an `FNDV` name (for example a rating image saved as `FNDV_V_Black_EN.png`) is no longer mistaken for that logo.
+
+- **`/promo-redo` and `--redo-all` now clean first:** the new Claude Code command `/promo-redo [map]` rebuilds a whole map: the previous results (promo pack, trailer, logo, lobby background, gameplay cut and screenshots, generated music) are MOVED to `final/_previous/<time>_redo/` (nothing is deleted, nothing stale reaches the new pack), then the pipeline runs again. The same as `run_all <map> --redo-all`. Inputs, art, characters, your own music file and the source recordings are never moved; with no source recording the gameplay video and screenshots are kept. Open a NEW Claude Code session after the update to get the command.
+
 ## v1.1.15 — `--redo-all`: rebuild everything without deleting first
 
 - **`--redo-all`: rebuild everything without deleting anything first:** `run_all <map> --redo-all` copies the current `promo_pack/` to `final/_previous/<time>_promo_pack/`, then redoes the portrait art (no-Qwen and conform maps), the gameplay cut, the generated music, the trailer, the pack and the lightbox from the current inputs. Your own landscape art (conform) and your own music file are never touched; `--skip-video` / `--skip-images` still win; without `--no-qwen` a standard map also gets new Qwen artwork as usual.

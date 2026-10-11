@@ -127,13 +127,35 @@ def main():
     if a.redo_all:
         a.redo_video = True
         a.redo_portrait = True
-        pack = proj / "promo_pack"
-        if pack.is_dir() and any(pack.iterdir()):
-            import shutil
-            import time as _t
-            dest = proj / "final" / "_previous" / (_t.strftime("%Y%m%d_%H%M%S") + "_promo_pack")
-            shutil.copytree(str(pack), str(dest))
-            print("--redo-all: the old promo_pack/ is kept in %s" % dest.relative_to(proj))
+        # CLEAN first: the generated results of the previous run are MOVED (not deleted) to final/_previous/<time>_redo/, so the new
+        # run starts from clean folders and no stale file (old badge, old ProRes, old music) can sneak into the new pack.
+        # Never moved: your inputs, artwork*.png, characters, title, your own landscape art (conform), your own music file,
+        # the source recordings, captures/selection.json.
+        import shutil
+        import time as _t
+        arch = proj / "final" / "_previous" / (_t.strftime("%Y%m%d_%H%M%S") + "_redo")
+        todo = ["promo_pack", "final/trailer.mp4", "final/trailer_build.log", "final/_live_frame.jpg"]
+        if not a.skip_images:
+            todo += ["final/island_logo.png", "background/lobby_background.png"]
+        _cg = proj / "captures" / "gameplay"
+        _has_rec = _cg.is_dir() and any(f.suffix.lower() in VIDEO_EXT and f.stem.lower() != "gameplay" for f in _cg.iterdir())
+        if not _has_rec and not a.skip_video:
+            print("--redo-all: no source recording in captures/gameplay: the gameplay video, its music and the screenshots are kept as they are")
+        if not a.skip_video and _has_rec:
+            todo += ["captures/gameplay/gameplay.mp4", "captures/gameplay/gameplay.json", "captures/screenshots"]
+            todo += ["audio/music.wav", "audio/gameplay_music.wav", "audio/music_mood.txt"] if not any(
+                f.stem.lower() == "music" and f.suffix.lower() != ".wav" for f in (proj / "audio").iterdir() if (proj / "audio").is_dir()) else ["audio/gameplay_music.wav"]
+        moved = []
+        for rel in todo:
+            src_ = proj / rel
+            if src_.exists():
+                (arch / rel).parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    shutil.move(str(src_), str(arch / rel))
+                    moved.append(rel)
+                except OSError as e:
+                    print("--redo-all: could not move %s (%s), it will be overwritten" % (rel, e))
+        print("--redo-all: cleaned %d item(s); the old results are in %s" % (len(moved), arch.relative_to(proj)))
     caps = proj / "captures" / "gameplay"
     print("=" * 64)
     import version as V

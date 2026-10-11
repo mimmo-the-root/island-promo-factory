@@ -24,7 +24,7 @@ Use the skills in `.claude/skills/` (source: `scripts/claude_kit/`, synced by `s
 - Every stage must exit 0 AND create/update its output; scripts exit 1 with a clear message otherwise.
 - Embedded Python ignores the script dir: scripts insert their own dir in `sys.path` first.
 - Gameplay video: default look is cinematic (edited montage, generated music, 4+ real moments); `--gameplay-look off` gives the unedited cut. Always validate (`video_validate.py --kind gameplay`).
-- PEGI and "Developed in Fortnite" are video-only. Do not redistribute fonts/badges/franchise art you cannot license.
+- The age-rating (ESRB) and "Developed in Fortnite" badges are video-only. Do not redistribute fonts/badges/franchise art you cannot license.
 - Debug output behind `PROMO_DEBUG=1`. Run `python tests/smoke_test.py` after changes.
 
 ## Versioning (keep it consistent)

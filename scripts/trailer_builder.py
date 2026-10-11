@@ -2,7 +2,7 @@ import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(_
 """Trailer v1 builder (no AI video, no ComfyUI).
 
 Ken Burns shots from the project's still images, crossfades, procedural embers,
-vignette, end card with the island logo, optional PEGI / "Developed in Fortnite"
+vignette, end card with the island logo, optional age-rating (ESRB) / "Developed in Fortnite"
 badges (video-only). Frames are rendered with Pillow and piped to ffmpeg
 (libx264 + AAC). Output: Projects/<map>/final/trailer.mp4 (1920x1080, 30 fps).
 
@@ -31,6 +31,7 @@ LOGO_FADE_START = 4.0  # logo starts fading in this many seconds before the end
 LOGO_FADE_LEN = 1.5
 LOGO_WIDTH_FRAC = 0.60
 BADGE_MAX_H_FRAC = 0.12
+RATING_MAX_H_FRAC = 0.15      # the (tall) age-rating badge a little larger so its text stays legible
 BADGE_MARGIN = 60
 BADGE_END_SECONDS = 5.0
 MAX_SOURCE_W = 3600    # larger sources are pre-shrunk for speed / alias-free sampling
@@ -117,6 +118,19 @@ def find_music(proj):
             wav = [f for f in files if f.stem.lower() == "music"]
             if wav:
                 return wav[0]
+    return None
+
+
+def find_rating_badge(proj):
+    """The age-rating badge for the left corner: the map's own rating (ESRB, e.g. Teen) in Projects/<map>/badges/ first, then
+    Resources/badges/. File name: rating.png, or any esrb*.png / rating*.png."""
+    for bdir in (proj / "badges", pp.ROOT / "Resources" / "badges"):
+        if not bdir.is_dir():
+            continue
+        for f in sorted(bdir.glob("*.png")):
+            n = f.name.lower()
+            if n == "rating.png" or n.startswith("esrb") or n.startswith("rating"):
+                return f
     return None
 
 
@@ -451,6 +465,12 @@ def main():
         if bdir.is_dir():
             for f in sorted(bdir.glob("*.png")):
                 n = f.name.lower()
+                try:
+                    with Image.open(f) as _im:
+                        if "fndv" in n and _im.width < 2 * _im.height:
+                            continue        # the wide "Developed in Fortnite" logo only: a tall file with an FNDV name is something else (e.g. a rating badge)
+                except Exception:
+                    continue
                 if "fndv" in n and "white" in n:
                     fndv.setdefault("white", f)
                 elif "fndv" in n and "black" in n:
@@ -459,21 +479,21 @@ def main():
     if "white" in fndv and "black" in fndv:
         badge_dual = {k: fit_badge(v, int(H * BADGE_MAX_H_FRAC)) for k, v in fndv.items()}
         log("badge right (adaptive): %s / %s" % (fndv["white"].name, fndv["black"].name))
-    for key, fname in (("left", "pegi.png"), ("right", "developed_in_fortnite.png")):
+    for key, fname in (("left", "rating.png"), ("right", "developed_in_fortnite.png")):
         if key == "right" and badge_dual is not None:
             badges["right"] = badge_dual["white"]
             continue
-        p = find_badge(proj, fname)
+        p = find_rating_badge(proj) if key == "left" else find_badge(proj, fname)
         if p is None:
             missing.append(fname)
         else:
-            badges[key] = fit_badge(p, int(H * BADGE_MAX_H_FRAC))
+            badges[key] = fit_badge(p, int(H * (RATING_MAX_H_FRAC if key == "left" else BADGE_MAX_H_FRAC)))
             log("badge %s: %s" % (key, p))
     if missing:
         log("WARNING: badge file(s) missing, trailer built WITHOUT them: %s" % ", ".join(missing))
         log("WARNING: put official transparent PNGs in %s (or per-map in %s)" % (
             pp.ROOT / "Resources" / "badges", proj / "badges"))
-        log("WARNING: expected names: pegi.png, developed_in_fortnite.png")
+        log("WARNING: expected names: rating.png (or esrb_*.png) for the age rating, developed_in_fortnite.png (or the FNDV_*_White/Black_*.png pair)")
 
     music = find_music(proj)
     if music:

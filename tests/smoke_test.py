@@ -363,8 +363,19 @@ def main():
     (ra / "p1" / "promo_pack" / "01.png").write_text("x")
     (ra / "p1" / "audio" / "music.mp3").write_text("m")
     rc, out = run(py, ["scripts/run_all.py", "--project", "p1", "--redo-all", "--skip-images", "--skip-video"], dict(env, PROMO_PROJECTS_DIR=str(ra)), root)
-    arch = list((ra / "p1" / "final" / "_previous").glob("*_promo_pack/01.png"))
-    check(len(arch) == 1 and "old promo_pack/ is kept" in out and "audio/music.* exists" in out, "run_all --redo-all archives the old promo_pack and keeps the user's music")
+    arch = list((ra / "p1" / "final" / "_previous").glob("*_redo/promo_pack/01.png"))
+    check(len(arch) == 1 and "cleaned" in out and not (ra / "p1" / "promo_pack" / "01.png").exists() and "audio/music.* exists" in out and (ra / "p1" / "audio" / "music.mp3").exists(), "run_all --redo-all moves the old results aside (clean) and keeps the user's music")
+
+    # video badges: the age-rating badge (ESRB) goes in the left corner, found by name; a tall FNDV-named file is not the Fortnite logo
+    bp = tmp / "badge_projects" / "p1" / "badges"
+    bp.mkdir(parents=True)
+    (tmp / "badge_projects" / "p1" / "config.json").write_text("{}")
+    from PIL import Image as _BI
+    _BI.new("RGBA", (325, 493), (255, 255, 255, 255)).save(bp / "esrb_teen.png")
+    rc, out = run(py, ["-c", "import sys; sys.argv=['x']; sys.path.insert(0,'scripts'); import trailer_builder as t, promo_project as p; print('RATING', t.find_rating_badge(p.project_dir()).name)"],
+                  dict(env, PROMO_PROJECTS_DIR=str(tmp / "badge_projects"), PROMO_PROJECT="p1"), root)
+    check("RATING esrb_teen.png" in out, "trailer: the age-rating badge is found by name (esrb_*.png / rating.png), PEGI is gone")
+    check("pegi" not in (root / "scripts" / "trailer_builder.py").read_text(encoding="utf-8").lower(), "trailer: no PEGI left in the code")
 
     se = tmp / "se_projects"
     for m in ("m1", "m2"):

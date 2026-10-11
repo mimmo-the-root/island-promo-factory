@@ -71,7 +71,7 @@ def main():
     report("OK" if fonts else "WARN", "brand font: %s" % (fonts[0].name if fonts else "none, the bundled open font is used"),
            "optional: put your licensed title font in Resources\\brand\\font\\ (see the README there)")
     badges = [p for p in (pp.ROOT / "Resources" / "badges").glob("*.png")]
-    report("OK" if badges else "WARN", "video badges (PEGI / Developed in Fortnite): %s" % ("%d file(s)" % len(badges) if badges else "none, the trailer has no badges"),
+    report("OK" if badges else "WARN", "video badges (age rating ESRB / Developed in Fortnite): %s" % ("%d file(s)" % len(badges) if badges else "none, the trailer has no badges"),
            "optional: download the official badges and put them in Resources\\badges\\ (see the README there)")
 
     # --- projects ---
