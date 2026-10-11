@@ -10,8 +10,9 @@ island (for licensed franchises, follow the IP holder's brand rules).
 - **Burbank / Fortnite fonts**: not distributed. Place your own licensed font in `Resources/brand/font/`.
 - **ESRB (age rating) and "Developed in Fortnite" badges**: not distributed. Get the official files from their
   owners and place them in `Resources/badges/` (see the README there).
-- **AI models** (Qwen Image Edit, text encoder, VAE, optional upscaler, optional LoRA): download them
-  yourself from their official pages and respect each model's licence.
+- **AI models** (Qwen Image Edit, its text encoder, VAE, optional upscaler and LoRA; ACE-Step 1.5 music model with its text encoders and VAE): not distributed.
+  `download_models.bat` (or `python scripts/models.py download`) fetches them from their official Hugging Face / GitHub pages; check and respect each model's licence
+  (ACE-Step is published under Apache-2.0) before using the results commercially.
 - **Game / franchise artwork**: no screenshots or characters of any game are included.
 
 ## Bundled third-party files

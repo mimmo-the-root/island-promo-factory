@@ -33,7 +33,7 @@ def config_mood():
         import json
         m = json.loads((pp.project_dir() / "config.json").read_text(encoding="utf-8")).get("music_mood", "action")
         return m if m in PROGRESSIONS else "action"
-    except Exception:
+    except BaseException:      # no map selected / unreadable config
         return "action"
 
 

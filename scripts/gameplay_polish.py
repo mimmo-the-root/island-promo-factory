@@ -10,6 +10,7 @@ build_scenes(..., n=3, style=...)  -> 2-3 real scenes, soft dissolves, same grad
 """
 import subprocess
 import sys
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -117,18 +118,66 @@ def _render_part(ffmpeg, video, st, need, speed, out_len, dest, zoom_in, look):
     _run(cmd)
 
 
+def _ai_montage_track(total, seed, music_path):
+    """AI music for the beat-synced montage: returns the MEASURED bpm and writes the trimmed track (first downbeat at t=0) to music_path,
+    or returns None when AI music is off / not available / fails (the caller then uses the synthesiser)."""
+    try:
+        import music_ai
+        import music_beats
+        import music_generator as mg
+        if music_ai.engine_setting() == "synth":
+            return None
+        ok, why = music_ai.ai_ready()
+        if not ok:
+            print("polish: AI music not used (%s) -> synthesiser" % why)
+            return None
+        need_s = min(total, 38.0) + 8.0
+        shared = music_path.parent / "music.wav"          # the track of the run's "music" stage: same sound as the trailer, no new generation
+        info, raw = None, None
+        try:
+            if (music_path.parent / "music_engine.txt").read_text(encoding="utf-8").strip() == "ai" and shared.is_file():
+                import wave as _wave
+                with _wave.open(str(shared), "rb") as _w:
+                    if _w.getnframes() / float(_w.getframerate()) >= need_s:
+                        raw, info = shared, {"bpm": music_ai.MOODS.get(mg.config_mood(), music_ai.MOODS["action"])[1]}
+                        print("polish: using the AI track %s (same as the trailer)" % shared.name)
+        except Exception:
+            raw = None
+        if raw is None:
+            raw = music_path.parent / "_candidates" / "montage_raw.wav"
+            info = music_ai.generate_ai(mg.config_mood(), min(total, 38.0) + 14.0, seed, raw, music_ai.candidates_setting())
+        bpm, first, conf = music_beats.detect(raw, info["bpm"])
+        print("polish: tempo %.2f bpm, first downbeat at %.2f s (confidence %.2f)" % (bpm, first, conf))
+        import video_tools as vt
+        ff = vt.find_tool("ffmpeg", "FFMPEG_PATH")
+        r = subprocess.run([str(ff), "-y", "-v", "error", "-ss", "%.3f" % first, "-i", str(raw), "-c:a", "pcm_s16le", str(music_path)],
+                           capture_output=True, text=True)
+        if r.returncode != 0 or not music_path.exists():
+            raise RuntimeError("could not trim the track: %s" % (r.stderr or "")[-200:])
+        return bpm
+    except (Exception, SystemExit) as e:
+        print("polish: AI music failed (%s) -> synthesiser" % e)
+        return None
+
+
 def build(ffmpeg, video, moments, total, dest, music_path, seed, source_duration, style="cinematic"):
     look = LOOKS[style]
     import music_generator as mg
-    # 1) our own music first: its tempo drives the edit
-    probe_buf, bpm, key, prog = mg.generate(seed, 8.0, "action")
-    segs, seg_len, ov, n, out_total = plan(moments, total, bpm, source_duration, look)
-    buf, bpm, key, prog = mg.generate(seed, out_total + 1.0, "action")
     music_path = Path(music_path)
     music_path.parent.mkdir(parents=True, exist_ok=True)
-    mg.write_wav(music_path, buf)
+    # 1) the music first: its tempo drives the edit. AI music (ACE-Step): measure its real tempo and first downbeat, trim the track so
+    #    the first bar starts at t=0, and plan every cut on that measured beat grid. Synth (or any AI problem): the old way, exact tempo known.
+    bpm = _ai_montage_track(total, seed, music_path)
+    if bpm is not None:
+        segs, seg_len, ov, n, out_total = plan(moments, total, bpm, source_duration, look)
+        print("polish: AI music, measured %.2f bpm -> %s" % (bpm, music_path.name))
+    else:
+        probe_buf, bpm, key, prog = mg.generate(seed, 8.0, "action")
+        segs, seg_len, ov, n, out_total = plan(moments, total, bpm, source_duration, look)
+        buf, bpm, key, prog = mg.generate(seed, out_total + 1.0, "action")
+        mg.write_wav(music_path, buf)
+        print("polish: music seed=%d bpm=%d -> %s" % (seed, bpm, music_path.name))
     beat = 60.0 / bpm
-    print("polish: music seed=%d bpm=%d -> %s" % (seed, bpm, music_path.name))
     print("polish: %d segments x %.2f s (speeds %s), transitions %.2f s, total %.1f s" % (
         n, seg_len, ", ".join("%.2gx" % s[2] for s in segs), ov, out_total))
 
@@ -157,7 +206,7 @@ def build(ffmpeg, video, moments, total, dest, music_path, seed, source_duration
         for p in parts:
             cmd += ["-i", str(p)]
         cmd += ["-i", str(music_path), "-filter_complex", graph, "-map", "[v]", "-map", "%d:a" % n]
-        cmd += pp.h264_args(ffmpeg, 20) + ["-r", "30", "-af", "afade=t=in:st=0:d=0.1,afade=t=out:st=%.3f:d=1.2" % (out_total - 1.2),
+        cmd += pp.h264_args(ffmpeg, 20) + ["-r", "30", "-af", "afade=t=in:st=0:d=0.1,afade=t=out:st=%.3f:d=1.2,apad" % (out_total - 1.2),
                                            "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-t", "%.3f" % out_total,
                                            "-movflags", "+faststart", str(dest)]
         _run(cmd)
@@ -184,10 +233,24 @@ def build_scenes(ffmpeg, video, moments, total, dest, music_path, seed, source_d
         centre = (a + b) / 2.0
         st = max(0.0, min(centre - need / 2.0, source_duration - need))
         segs.append((round(st, 3), round(need, 3)))
-    buf, bpm, key, prog = mg.generate(seed, total + 1.0, mg.config_mood())   # mood chosen for the map (dark for horror, epic, calm, action)
     music_path = Path(music_path)
     music_path.parent.mkdir(parents=True, exist_ok=True)
-    mg.write_wav(music_path, buf)
+    gen = music_path.parent / "music.wav"
+    reuse = False
+    if gen.is_file() and (music_path.parent / "music_engine.txt").exists():
+        try:
+            import wave as _wave
+            with _wave.open(str(gen), "rb") as _w:
+                reuse = _w.getnframes() / float(_w.getframerate()) >= total + 1.0       # long enough: gameplay and trailer share ONE track
+        except Exception:
+            reuse = False
+    if reuse:
+        shutil.copyfile(str(gen), str(music_path))
+        bpm = 0
+        print("polish: music: reusing %s (same track as the trailer)" % gen.name)
+    else:
+        import music_ai
+        bpm = music_ai.make_track(mg.config_mood(), total + 1.0, seed, music_path).get("bpm", 0)   # mood chosen for the map (dark for horror, epic, calm, action)
     print("scenes: %d real scenes x %.1f s, dissolves %.1f s, total %.1f s, music seed=%d bpm=%d" % (n, seg_len, ov, total, seed, bpm))
     with tempfile.TemporaryDirectory() as td:
         parts = []

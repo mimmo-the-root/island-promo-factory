@@ -206,10 +206,12 @@ def main():
         pass
     if a.redo_all and has_music and audio.is_dir() and all(f.name == "music.wav" or f.stem.lower() != "music" for f in audio.iterdir()):
         has_music = False      # --redo-all: only the GENERATED music.wav is made again, never a music file of the user's
+    # the music comes BEFORE the video cut: the gameplay scenes reuse the same track (one sound for gameplay and trailer)
     if has_music:
-        stages.append(("music", None, "audio/music.* exists"))
+        music_stage = ("music", None, "audio/music.* exists")
     else:
-        stages.append(("music", [py, str(SCRIPTS / "music_generator.py")] + (["--seed", str(a.seed)] if a.seed is not None else []), None))
+        music_stage = ("music", [py, str(SCRIPTS / "music_ai.py")] + (["--seed", str(a.seed)] if a.seed is not None else []), None)
+    stages.insert(1, music_stage)
     os.environ["PROMO_VIDEO_LOOK"] = a.gameplay_look
     stages.append(("trailer", [py, str(SCRIPTS / "trailer_builder.py")], None))
     stages.append(("promo pack", [py, str(SCRIPTS / "promo_pack.py")], None))
@@ -218,6 +220,13 @@ def main():
     # expected duration per stage: last successful run of the same kind, else a rough default
     defaults = {"images": 30 if (a.no_qwen or a.conform) else 300, "video analyse": 25, "video cut": 30, "music": 4,
                 "trailer": 50, "promo pack": 10, "lightbox": 4}
+    if music_stage[1] is not None:
+        try:
+            import music_ai
+            if music_ai.will_use_ai():
+                defaults["music"] = 60 * music_ai.candidates_setting() + 20      # AI music: about a minute per candidate
+        except Exception:
+            pass
     prev = {}
     try:
         old_run = json.loads((proj / "final" / "run_timings.json").read_text(encoding="utf-8"))

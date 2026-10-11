@@ -377,6 +377,92 @@ def main():
     check("RATING esrb_teen.png" in out, "trailer: the age-rating badge is found by name (esrb_*.png / rating.png), PEGI is gone")
     check("pegi" not in (root / "scripts" / "trailer_builder.py").read_text(encoding="utf-8").lower(), "trailer: no PEGI left in the code")
 
+    # models.py: resumable download from a local server (Range support), size check, nothing half-done under the final name
+    import http.server as _hs
+    import threading as _th
+    import models as _models
+    payload = bytes(range(256)) * 4096          # 1 MiB
+    class _H(_hs.BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+        def _hdr(self):
+            rng = self.headers.get("Range")
+            start = int(rng.split("=")[1].split("-")[0]) if rng else 0
+            self.send_response(206 if rng else 200)
+            self.send_header("Content-Length", str(len(payload) - start))
+            self.end_headers()
+            return start
+        def do_HEAD(self):
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+        def do_GET(self):
+            st = self._hdr()
+            self.wfile.write(payload[st:])
+    srv = _hs.ThreadingHTTPServer(("127.0.0.1", 0), _H)
+    _th.Thread(target=srv.serve_forever, daemon=True).start()
+    mdir = tmp / "models_dir"
+    ent = ("audio", "vae", "fake_model.safetensors", "http://127.0.0.1:%d/x" % srv.server_address[1], len(payload), True)
+    (mdir / "vae").mkdir(parents=True)
+    (mdir / "vae" / "fake_model.safetensors.part").write_bytes(payload[:300000])        # an interrupted earlier download
+    check(not _models.present(mdir, ent), "models: a missing file is reported as missing")
+    ok = _models.download(ent, mdir)
+    check(ok and (mdir / "vae" / "fake_model.safetensors").read_bytes() == payload and not (mdir / "vae" / "fake_model.safetensors.part").exists(),
+          "models: an interrupted download is resumed and finished (size-checked)")
+    check(_models.present(mdir, ent), "models: present() sees the finished file")
+    srv.shutdown()
+    check(any(m[2] == "acestep_v1.5_turbo.safetensors" for m in _models.entries("audio")) and len(_models.entries("image")) == 3,
+          "models: manifest has the ACE-Step files and the 3 required Qwen files")
+
+    # music_ai: scoring ranks a track with a build-up above flat noise; with ComfyUI unreachable the synth fallback makes the track
+    import numpy as _np
+    import wave as _wave
+    import music_ai as _ma
+    def _wav(path, x):
+        with _wave.open(str(path), "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(44100)
+            w.writeframes((_np.clip(x, -1, 1) * 32767).astype("<i2").tobytes())
+    t_ = _np.arange(44100 * 12) / 44100.0
+    build = _np.sin(2 * _np.pi * 110 * t_) * _np.linspace(0.05, 0.5, len(t_)) * (0.7 + 0.3 * _np.sin(2 * _np.pi * 0.5 * t_))
+    flat = _np.random.default_rng(1).normal(0, 0.12, len(t_))
+    _wav(tmp / "build.wav", build)
+    _wav(tmp / "flat.wav", flat)
+    check(_ma.score_track(tmp / "build.wav") > _ma.score_track(tmp / "flat.wav"), "music_ai: a track that builds scores higher than flat noise")
+    _ma.COMFY_URL = "http://127.0.0.1:9"
+    res = _ma.make_track("dark", 3.0, 5, tmp / "fallback" / "music.wav", engine="auto")
+    check(res["engine"] == "synth" and (tmp / "fallback" / "music.wav").exists(), "music_ai: ComfyUI unreachable -> synth fallback makes the track")
+    try:
+        _ma.make_track("dark", 3.0, 5, tmp / "fallback" / "m2.wav", engine="ai")
+        forced = False
+    except RuntimeError:
+        forced = True
+    check(forced, "music_ai: engine 'ai' with no ComfyUI reports an error instead of silently using the synth")
+
+    # beat-synced montage with AI music: the measured tempo and first downbeat are used, the trimmed track starts on the downbeat
+    import music_beats as _mb
+    import gameplay_polish as _gp
+    sr_, bpm_, first_ = 44100, 124.0, 0.37
+    clk = _np.zeros(sr_ * 40, dtype=_np.float32)
+    for k_ in range(int(40 * bpm_ / 60)):
+        s_ = int((first_ + k_ * 60 / bpm_) * sr_)
+        if s_ + 2000 < len(clk):
+            clk[s_:s_ + 2000] += (_np.sin(2 * _np.pi * 60 * _np.arange(2000) / sr_) * _np.exp(-_np.arange(2000) / 500) * (1.0 if k_ % 4 == 0 else 0.6)).astype(_np.float32)
+    clk += _np.random.default_rng(0).normal(0, 0.02, len(clk)).astype(_np.float32)
+    mb_bpm, mb_first, _c = _mb.detect(clk, 125.0, sr=sr_)
+    check(abs(mb_bpm - bpm_) < 0.6 and min(abs(mb_first - first_), abs(mb_first - first_ - 4 * 60 / bpm_)) < 0.06, "beats: tempo %.2f and first downbeat %.2f s measured on a click track" % (mb_bpm, mb_first))
+    adir = tmp / "mont_audio"
+    adir.mkdir()
+    _wav(adir / "music.wav", clk * 0.5)
+    (adir / "music_engine.txt").write_text("ai")
+    _ma.ai_ready = lambda start=True: (True, "")
+    got = _gp._ai_montage_track(20.0, 1, adir / "gameplay_music.wav")
+    xr, srr = _ma.read_wav(adir / "gameplay_music.wav")
+    check(got is not None and abs(got - bpm_) < 0.6 and abs(len(xr) / srr - (40 - mb_first)) < 0.1, "montage: AI track is trimmed to the first downbeat, tempo %s" % got)
+    check(_mb.detect(adir / "gameplay_music.wav", got)[1] < 0.06 or _mb.detect(adir / "gameplay_music.wav", got)[1] > 4 * 60 / bpm_ - 0.06, "montage: after trimming the first downbeat is at t=0")
+    os.environ["PROMO_MUSIC_ENGINE"] = "synth"
+    check(_gp._ai_montage_track(20.0, 1, adir / "x.wav") is None, "montage: music_engine=synth keeps the old synthesiser path")
+    del os.environ["PROMO_MUSIC_ENGINE"]
+
     se = tmp / "se_projects"
     for m in ("m1", "m2"):
         (se / m / "final").mkdir(parents=True)

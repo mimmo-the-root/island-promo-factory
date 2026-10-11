@@ -78,3 +78,13 @@ python scripts/trailer_builder.py # uses captures/clips/clip_*.mp4 + island_code
 ## Rebuild everything: `--redo-all`
 
 `/promo-redo <map>` in Claude Code, or `run_all <map> --redo-all` (add `--no-qwen` to keep the art), rebuilds the whole package from the current inputs: it cleans first (the old promo pack, trailer, logo, lobby background, gameplay cut, screenshots and generated music are MOVED to `final/_previous/<time>_redo/`, nothing is deleted) and then runs the pipeline again. Remakes the portrait art, the gameplay cut, the generated music, trailer, pack and lightbox. Your own landscape art (conform) and your own music file are never touched. `--skip-video` keeps the video stages out.
+
+## Music (AI, with automatic fallback)
+
+The trailer and the gameplay video share ONE track, made by the "music" stage of `run_all` (it runs before the video cut) with `scripts/music_ai.py`:
+- **AI (default when possible):** ACE-Step 1.5 through ComfyUI. The prompt is built from the map's `music_mood` (dark / epic / calm / action) and title style; the track is instrumental. Three candidates are generated (`"music_candidates": 3` in `config.json`, about a minute each), an automatic score (dynamics, build-up, level, no clipping) keeps the best one as `audio/music.wav`, the others stay in `audio/_candidates/`. The score only ranks: listen and, if you prefer another one, run `python scripts\music_ai.py use <file> --project <map>` and then `run_all <map> --no-qwen --skip-video`.
+- **Fallback:** when ComfyUI is not running (the kit tries to start it), the ACE-Step files are missing (`python scripts\models.py download --group audio`) or the generation fails, the built-in synthesiser makes the track and the console says so. Nothing stops.
+- **Switch:** `"music_engine": "auto" | "ai" | "synth"` in `config.json` (or `PROMO_MUSIC_ENGINE`); `audio/music_engine.txt` records which one made the current track.
+- **Your own music** (`audio/music.mp3`) always wins for the trailer. A new track: `--seed N`, or delete `audio/music.wav` (or `/promo-redo`).
+- **GPU:** Qwen (artwork) and ACE-Step (music) run one after the other; the models loaded in ComfyUI are freed before and after the music.
+- **Listening test:** `python scripts\music_ai.py --test --project <map>` writes candidates to `audio/_ai_test/` and changes nothing else.

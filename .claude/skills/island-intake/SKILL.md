@@ -25,7 +25,7 @@ Show the ABSOLUTE folder paths printed by intake (the map folder is `Projects/<s
 | Environment | `background/` (any name, any image format) | island capture without characters, at least 1920 px wide |
 | ONE character | `characters/` | transparent PNG with a small margin; a render on a flat background also works (you cut it out with `PY prepare_character.py <image> --project <slug>`) |
 | Gameplay recording | `captures/gameplay/` | mp4, 5+ minutes, 1080p, game UI visible; without it gameplay, trailer clips and screenshots are skipped |
-| Own music (optional) | `audio/` as `music.mp3` | otherwise the kit generates original music |
+| Own music (optional) | `audio/` as `music.mp3` | otherwise the kit generates original music (AI via ComfyUI when available, else the built-in synth) |
 Whatever the user's names are, copy/rename the files to the standard names yourself (`background/background.png`, `characters/character_01.png`); originals stay in `input/`.
 
 ## 3b. Decide style and character yourself

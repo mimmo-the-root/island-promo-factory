@@ -17,9 +17,13 @@ import video_tools as vt
 
 COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8188")
 MODELS = [  # (ComfyUI models endpoint, file name, where to download)
-    ("diffusion_models", "qwen_image_edit_2511_int8_convrot.safetensors", "docs/INSTALL.md step 4"),
-    ("text_encoders", "qwen_2.5_vl_7b_fp8_scaled.safetensors", "docs/INSTALL.md step 4"),
-    ("vae", "qwen_image_vae.safetensors", "docs/INSTALL.md step 4"),
+    ("diffusion_models", "qwen_image_edit_2511_int8_convrot.safetensors", "image"),
+    ("text_encoders", "qwen_2.5_vl_7b_fp8_scaled.safetensors", "image"),
+    ("vae", "qwen_image_vae.safetensors", "image"),
+    ("diffusion_models", "acestep_v1.5_turbo.safetensors", "audio"),
+    ("text_encoders", "qwen_0.6b_ace15.safetensors", "audio"),
+    ("text_encoders", "qwen_4b_ace15.safetensors", "audio"),
+    ("vae", "ace_1.5_vae.safetensors", "audio"),
 ]
 results = []
 
@@ -97,8 +101,9 @@ def main():
                 have = get("%s/models/%s" % (COMFY_URL, folder))
             except Exception:
                 have = []
-            report("OK" if name in have else "WARN", "model %s%s" % (name, "" if name in have else " (missing)"),
-                   "put it in ComfyUI\\models\\%s\\ - download links: %s" % (folder, where))
+            what = "AI artwork (Qwen)" if where == "image" else "AI music (ACE-Step)"
+            report("OK" if name in have else "WARN", "model %s%s" % (name, "" if name in have else " (missing: %s is off, the kit still works)" % what),
+                   "download it automatically:  python scripts\\models.py download --group %s   (then restart ComfyUI)\nor by hand: docs/INSTALL.md step 4 (folder: ComfyUI\\models\\%s\\)" % (where, folder))
         try:
             ups = get("%s/models/upscale_models" % COMFY_URL)
         except Exception:
