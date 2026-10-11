@@ -481,11 +481,25 @@ def main():
     import default_skin as _ds
     importlib.reload(_ds)
     check(len(_ds.list_skins()) == 2 and _ds.skin_name(sk / "FN 02 Outfit (Funk Ops)(New Glasses).png") == ("Funk Ops", ["New Glasses"]), "default skin: lists skins and reads the name")
-    got_sk = _ds.ensure(sp / "nochar", log=lambda m: None)
+    check(_ds.ensure(sp / "nochar", log=lambda m: None) is None and not (sp / "nochar" / "characters" / "character_01.png").exists(),
+          "default skin: nothing is picked silently while no choice was made")
+    rc, out = run(py, ["scripts/intake.py", "--project", "nochar", "--json"], dict(env, PROMO_PROJECTS_DIR=str(sp), PROMO_SKINS_DIR=str(sk)), root)
+    check("no skin chosen" in out and not (sp / "nochar" / "characters" / "character_01.png").exists(), "default skin: intake asks for an explicit choice")
+    rc, out = run(py, ["scripts/default_skin.py", "--project", "nochar", "--random"], dict(env, PROMO_PROJECTS_DIR=str(sp), PROMO_SKINS_DIR=str(sk), PROMO_SKIN_SEED="7"), root)
+    got_sk = json.loads((sp / "nochar" / "config.json").read_text()).get("default_skin")
     c_sk = json.loads((sp / "nochar" / "config.json").read_text())
     check(got_sk and (sp / "nochar" / "characters" / "character_01.png").is_file() and c_sk["characters"][0]["default_skin"] == got_sk
           and "DESCRIBE" not in c_sk["characters"][0]["identity"], "default skin: a map without a character gets a random skin and an identity")
     check(_ds.ensure(sp / "nochar", log=lambda m: None) is None, "default skin: the pick is kept on later runs")
+    # stale identity / hand-edited prompt of a deleted hero must not survive the substitution
+    (sp / "nochar" / "characters" / "character_01.png").unlink()
+    (sp / "nochar" / "qwen_prompt_custom.txt").write_text("old hero text")
+    c_sk = json.loads((sp / "nochar" / "config.json").read_text()); c_sk["characters"][0]["identity"] = "Woman in a medic cap"
+    (sp / "nochar" / "config.json").write_text(json.dumps(c_sk))
+    _ds.ensure(sp / "nochar", log=lambda m: None)
+    c_sk = json.loads((sp / "nochar" / "config.json").read_text())
+    check("medic" not in c_sk["characters"][0]["identity"] and c_sk["characters"][0].get("identity_previous") == "Woman in a medic cap"
+          and not (sp / "nochar" / "qwen_prompt_custom.txt").exists(), "default skin: a deleted hero's identity and custom prompt are replaced, not reused")
     check(_ds.ensure(sp / "ownchar", log=lambda m: None) is None and _Im.open(sp / "ownchar" / "characters" / "character_01.png").size == (50, 50),
           "default skin: a skin you provide is never replaced")
     for k in ("PROMO_SKINS_DIR", "PROMO_SKIN_SEED", "PROMO_PROJECTS_DIR"):

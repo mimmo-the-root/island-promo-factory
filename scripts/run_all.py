@@ -114,11 +114,18 @@ def main():
     log = open(ROOT / "last_run_all.log", "w", encoding="utf-8", errors="replace")
     sys.stdout = Tee(sys.__stdout__, log)
     env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
-    try:   # no character of its own -> a random skin from Resources/Characters, kept for later runs
+    try:   # skin_mode "random": a deleted character is replaced by a random skin. No mode chosen: stop and ask, never pick silently.
         import default_skin
         default_skin.ensure(pp.project_dir())
+        _cfg0 = json.loads((pp.project_dir() / "config.json").read_text(encoding="utf-8"))
+        if not default_skin.has_character(pp.project_dir(), _cfg0) and _cfg0.get("skin_mode") not in ("none",) and not a.skip_images:
+            print("This map has no character and no skin was chosen. Choose one: put your own skin in characters/, or "
+                  "python scripts/default_skin.py --project %s --random, or --none." % pp.project_name())
+            raise SystemExit(2)
+    except SystemExit:
+        raise
     except Exception as e:
-        print("default skin not applied: %s" % e)
+        print("skin check failed: %s" % e)
     env.setdefault("PROMO_PLAN_B", pp.plan_b_default())
     print("Portrait: %s version of the hero (PROMO_PLAN_B=%s)" % ("full-figure" if env["PROMO_PLAN_B"] == "direct" else "bust", env["PROMO_PLAN_B"]))
     py = sys.executable

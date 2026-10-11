@@ -196,14 +196,21 @@ def main():
         print("(file names are examples: any name works, Claude renames the files for the kit)\n")
     import os
     os.environ["PROMO_PROJECT"] = slug
-    try:   # no character of its own -> a random skin from Resources/Characters (see default_skin.py)
+    try:   # no character: the skin must be an explicit choice (custom / random / none), never silent
         import default_skin
         picked = default_skin.ensure(proj, log=lambda m: None)
         if picked:
             cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
-            changed.append("default skin: " + picked)
+            changed.append("random skin: " + picked)
+        elif not default_skin.has_character(proj, cfg):
+            if cfg.get("skin_mode") == "none":
+                add("WARN", "skin: 'none' chosen, the map has no character", "the artwork stages need a hero; choose again: default_skin.py --project %s --random" % slug)
+            else:
+                add("BLOCK", "no skin chosen for this map",
+                    "ASK THE USER (three choices): 1) their own skin: put it in characters/ ; 2) a random one from Resources/Characters: "
+                    "python scripts/default_skin.py --project %s --random ; 3) no skin: python scripts/default_skin.py --project %s --none" % (slug, slug))
     except Exception as e:
-        add("WARN", "default skin not applied: %s" % e)
+        add("WARN", "skin check failed: %s" % e)
     check_config(proj, cfg)
     check_images(proj, cfg)
     check_video(proj)

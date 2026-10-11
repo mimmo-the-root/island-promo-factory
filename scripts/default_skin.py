@@ -1,13 +1,18 @@
 import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(__file__).resolve().parent))  # embedded python ignores script dir
-"""Default skin: a map with NO character of its own gets a random one from Resources/Characters/.
+"""Skin choice for a map that has NO character (characters/character_01.png missing and no other picture in characters/).
 
-Rules (one place):
-  - Only when the map has no character: characters/character_01.png is missing AND characters/ holds no other picture.
-    A skin you provide is never replaced.
+NOTHING is picked silently. The choice is explicit, three ways (config.json "skin_mode"):
+  custom  -> you put your own skin in the map's characters/ folder (no command needed)
+  random  -> python scripts/default_skin.py --project <map> --random      (a random one from Resources/Characters/)
+  none    -> python scripts/default_skin.py --project <map> --none        (recorded: no skin; the art stages need a hero, see intake)
+  Until one of them is chosen, intake.py and run_all stop and ask. A skin you provide is never replaced.
+
+Rules for "random":
   - The pick is random among Resources/Characters/*.png, cut to a workable size (prepare_character.py), saved as
     characters/character_01.png and remembered in config.json ("default_skin": "<file>"), so every later run keeps the same hero.
   - If characters[0].identity is still the placeholder it is written from the skin's name ("Skull Trooper").
   - Another one: python scripts/default_skin.py --project <map> --reroll   (or --skin "part of the file name" for a chosen one).
+  - With "random" set, a character you delete is replaced by a new random skin on the next run.
   - PROMO_SKINS_DIR points at another folder; PROMO_SKIN_SEED makes the pick repeatable.
 Resources/Characters/ is never published (Epic Games artwork): only your own copy.
 """
@@ -88,8 +93,18 @@ def apply(proj, cfg, skin):
     c.setdefault("side", "left")
     c.setdefault("pose", "keep the original pose from the reference, only slightly turned toward the center")
     c.setdefault("facing", "center")
-    if not str(c.get("identity", "")).strip() or PLACEHOLDER in str(c.get("identity", "")) or c.get("default_skin"):
-        c["identity"] = identity_for(skin)
+    # The map has no character of its own (or is being re-rolled): any identity text in config.json described the character that is
+    # gone, so it is replaced by the skin's own description (the old text is kept in identity_previous). Keeping it made Qwen draw the old hero.
+    old_id = str(c.get("identity", "")).strip()
+    if old_id and PLACEHOLDER not in old_id and old_id != identity_for(skin):
+        c["identity_previous"] = old_id
+    c["identity"] = identity_for(skin)
+    # a hand-edited Qwen prompt (qwen_prompt_custom.txt, used until deleted) describes the OLD hero: archive it so the prompt is rebuilt from the new identity
+    import time
+    for nm in ("qwen_prompt_custom.txt", "qwen_prompt_final.txt"):
+        f = Path(proj) / nm
+        if f.is_file():
+            f.replace(Path(proj) / ("%s.%s.old" % (nm, time.strftime("%Y%m%d_%H%M%S"))))
     c.pop("complete", None)                          # judged again from the new cut-out
     c["default_skin"] = skin.name
     cfg["default_skin"] = skin.name
@@ -104,7 +119,7 @@ def ensure(proj=None, log=print):
         cfg = json.loads((proj / "config.json").read_text(encoding="utf-8"))
     except Exception:
         return None
-    if has_character(proj, cfg):
+    if has_character(proj, cfg) or cfg.get("skin_mode") != "random":
         return None
     skins = list_skins()
     if not skins:
@@ -121,6 +136,8 @@ def main(argv=None):
     ap.add_argument("--project", default=None)
     ap.add_argument("--reroll", action="store_true", help="replace the map's character with another random skin")
     ap.add_argument("--skin", default=None, help="part of a skin's file name: use that one")
+    ap.add_argument("--random", action="store_true", help="choose 'random': this map gets a random skin now (and again if you delete its character)")
+    ap.add_argument("--none", action="store_true", help="choose 'none': no skin for this map")
     ap.add_argument("--list", action="store_true")
     a = ap.parse_args(argv)
     skins = list_skins()
@@ -133,7 +150,19 @@ def main(argv=None):
         os.environ["PROMO_PROJECT"] = a.project
     proj = pp.project_dir()
     cfg = json.loads((proj / "config.json").read_text(encoding="utf-8"))
+    if a.none:
+        cfg["skin_mode"] = "none"
+        (proj / "config.json").write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
+        print("Skin: none recorded for %s." % proj.name)
+        return 0
+    if a.random:
+        cfg["skin_mode"] = "random"
+        (proj / "config.json").write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
+        name = ensure(proj)
+        print("Skin: random -> %s" % (name or cfg.get("default_skin") or "the map already has a character"))
+        return 0
     if a.reroll or a.skin:
+        cfg["skin_mode"] = "random" if a.reroll else "chosen"
         if not skins:
             print("No skins in %s" % skins_dir())
             return 1
@@ -147,8 +176,8 @@ def main(argv=None):
         size = apply(proj, cfg, skin)
         print("Skin: %s (%dx%d). Rebuild the images: run_all %s --no-qwen --redo-portrait --skip-video (or without --no-qwen for new artwork)" % (skin.name, size[0], size[1], proj.name))
         return 0
-    name = ensure(proj)
-    print("Skin: %s" % (name or cfg.get("default_skin") or "the map already has its own character"))
+    print("Skin mode: %s (character present: %s). Choose: --random | --none | put your own file in characters/ | --skin NAME"
+          % (cfg.get("skin_mode") or "not chosen", has_character(proj, cfg)))
     return 0
 
 

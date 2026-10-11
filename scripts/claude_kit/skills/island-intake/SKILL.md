@@ -26,7 +26,7 @@ Show the ABSOLUTE folder paths printed by intake (the map folder is `Projects/<s
 | ONE character | `characters/` | transparent PNG with a small margin; a render on a flat background also works (you cut it out with `PY prepare_character.py <image> --project <slug>`) |
 | Gameplay recording | `captures/gameplay/` | mp4, 5+ minutes, 1080p, game UI visible; without it gameplay, trailer clips and screenshots are skipped |
 | Own music (optional) | `audio/` as `music.mp3` | otherwise the kit generates original music (AI via ComfyUI when available, else the built-in synth) |
-Whatever the user's names are, copy/rename the files to the standard names yourself (`background/background.png`, `characters/character_01.png`); originals stay in `input/`. If the user gave NO character, do not ask: `intake.py` picks a random skin from `Resources/Characters/` (saved as `characters/character_01.png`, name in `default_skin`); tell the user which one and that `python scripts/default_skin.py --project <slug> --reroll` picks another.
+Whatever the user's names are, copy/rename the files to the standard names yourself (`background/background.png`, `characters/character_01.png`); originals stay in `input/`. If the user gave NO character, ASK (AskUserQuestion, three choices): their own skin (they put it in `characters/`), a random one (`PY default_skin.py --project <slug> --random`, from `Resources/Characters/`), or no skin (`--none`). Never pick one silently; `intake.py` BLOCKs until the choice is made. Another random one later: `--reroll`.
 
 ## 3b. Decide style and character yourself
 Look at the background and the character image (Read tool). Then:

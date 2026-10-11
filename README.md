@@ -49,7 +49,7 @@ new_map.bat my-map "MY MAP TITLE" --style SCI_FI
 :: put your files in Projects\my-map\
 ::   background\background.png     the environment, no characters, >= 1920 px wide
 ::   characters\character_01.png   ONE character, transparent PNG with margin on all sides
-::                                 (none? a random skin from Resources\Characters is used and kept)
+::                                 (none? choose: your own, --random from Resources\Characters, or --none: scripts\default_skin.py)
 ::   captures\gameplay\recording.mp4   a 5+ minute recording of your island (optional but recommended)
 :: edit Projects\my-map\config.json  (island_code, title, style, character identity)
 run_all.bat my-map --review-prompt           :: add --no-qwen if you have no ComfyUI
