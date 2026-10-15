@@ -471,6 +471,7 @@ def main():
     ap.add_argument("--project", default=None)
     ap.add_argument("--port", type=int, default=pp.console_port())
     ap.add_argument("--no-open", action="store_true")
+    ap.add_argument("--name", default="island-promo-factory", help="label only: tells this process apart from other tools' consoles")
     ap.add_argument("--idle-min", type=float, default=0,
                     help="exit by itself after this many minutes without any page request and without a run in progress (0 = never)")
     a = ap.parse_args()

@@ -36,7 +36,7 @@ def sync(root, quiet=False):
             target = dst / rel
             data = f.read_bytes()
             if target.exists():
-                if target.read_bytes() == data:
+                if target.read_bytes().replace(b"\r\n", b"\n") == data.replace(b"\r\n", b"\n"):
                     continue
                 (backup / rel).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(target, backup / rel)

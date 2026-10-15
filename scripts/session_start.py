@@ -17,6 +17,14 @@ try:
     if changes:
         msgs.append("Island Promo Factory kit synced (%d file(s)); open a new session to load updated skills." % len(changes))
     cur = V.read_version()
+    mk = V.ROOT / ".post-update"
+    if mk.exists():
+        try:
+            m = json.loads(mk.read_text(encoding="utf-8"))
+            msgs.append("Island Promo Factory updated from v%s to v%s: %s file(s)." % (m.get("from"), m.get("to"), m.get("files")))
+            mk.unlink()
+        except Exception:
+            pass
     latest = V.latest_release()
     tag = (latest or {}).get("tag", "")
     if tag and V.is_newer(tag, cur):

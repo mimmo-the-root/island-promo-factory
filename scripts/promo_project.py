@@ -128,6 +128,12 @@ def workflow_path(name="qwen_workflow_api.json"):
 _H264_CACHE = {}
 
 
+# RGB frames piped into ffmpeg (trailer) are converted to YUV with ffmpeg's default BT.601 matrix and carry no colour tags, while players and
+# YouTube decode untagged HD as BT.709: colours shift. Convert with the BT.709 matrix, limited range, and tag the stream (setparams writes the tags).
+BT709_VF = ("scale=in_range=full:out_range=tv:out_color_matrix=bt709,"
+            "setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv")
+
+
 def h264_args(ffmpeg, crf=18):
     """Video encoder arguments: libx264 when this ffmpeg build has it, else the best H.264 encoder available.
     (LGPL ffmpeg builds have no libx264.) Always yuv420p."""

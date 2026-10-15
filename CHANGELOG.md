@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.19 — Epic October 2026 rules + stability + update
+
+- Epic rules centralised in `scripts/epic_specs.json` (verified 2026-10-15, mandatory from 22 Oct 2026): thumbnails landscape + portrait (art+logo and art only), logo 1440x608, video 15–30 s MOV ProRes. Validator, promo pack and docs read from it.
+- Trailer is encoded BT.709-tagged (no more washed-out/dark colours in players); gameplay montages carry the same tags.
+- Qwen negative prompts and upload checklist cover Epic's forbidden content; intake skill explains the Replay recording setup.
+- Update: live consoles restart on the new version (unless a run is in progress), lock against concurrent sync/update, "updated from vA to vB" message at the next Claude session, CRLF-insensitive kit compare, console process labelled `--name island-promo-factory`.
+
 ## v1.1.18 — Skin choice is explicit (own / random / none), no stale hero description
 
 - **Skin for a map without a character: an explicit choice, never silent:** a map with no character stops (`intake.py` BLOCK, `run_all` exits) until one of three choices is made: your own skin in `characters/`, a random one from `Resources/Characters/` (`python scripts/default_skin.py --project <map> --random`; download the renders from https://brand.epicgames.com/document/469, the folder is never published), or none (`--none`, recorded; the artwork stages still need a hero). With `random` the pick is cut to a workable size, saved as `characters/character_01.png`, its name becomes the character description and it is kept in `config.json` (`default_skin`); if you delete the character a new random one is picked at the next run. The old description is kept as `identity_previous` and a hand-edited `qwen_prompt_custom.txt` is archived (`.old`), so Qwen is never told to draw the removed hero. Another skin: `--reroll` or `--skin "part of the name"`, `--list`; then `run_all <map> --no-qwen --redo-portrait --skip-video`.

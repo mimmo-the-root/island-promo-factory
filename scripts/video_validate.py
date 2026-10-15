@@ -2,8 +2,8 @@ import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(_
 """Validate a video against the Epic Creator Portal specs (read-only, uses ffprobe).
 
 Usage: video_validate.py <file> [--kind trailer|gameplay]
-Checks: container mp4/mkv/webm/mov, 1920x1080, duration 10-40 s, size < 400 MB,
-video stream present. Reports fps / codec / audio. Exit 1 on any failed check.
+Checks (limits from epic_specs.json): container mp4/mkv/webm/mov, 1920x1080, duration 15-30 s, size < 400 MB,
+video stream present; a .mov must be ProRes with uncompressed (PCM) stereo audio (Epic's delivery format). Reports fps / codec / audio. Exit 1 on any failed check.
 The file is NEVER modified. Gameplay must be real, unedited footage with in-game UI.
 Env: PROMO_DEBUG=1 prints the raw ffprobe JSON; FFPROBE_PATH overrides the binary.
 """
@@ -16,6 +16,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+import epic_specs
+SPEC = epic_specs.video()
 DEBUG = os.environ.get("PROMO_DEBUG") == "1"
 OK_FORMATS = {"mp4", "mov", "matroska", "webm"}  # ffprobe format_name tokens
 OK_EXT = {".mp4", ".mkv", ".webm", ".mov"}
@@ -80,14 +82,20 @@ def main():
     check(video is not None, "has a video stream")
     if video is not None:
         w, h = video.get("width"), video.get("height")
-        check((w, h) == (1920, 1080), "resolution exactly 1920x1080", "%sx%s" % (w, h))
+        check((w, h) == (SPEC["width"], SPEC["height"]), "resolution exactly %dx%d" % (SPEC["width"], SPEC["height"]), "%sx%s" % (w, h))
     try:
         dur = float(fmt.get("duration") or (video or {}).get("duration") or 0)
     except ValueError:
         dur = 0.0
-    check(10.0 <= dur <= 40.0, "duration 10-40 s", "%.2f s" % dur)
+    check(SPEC["min_s"] <= dur <= SPEC["max_s"], "duration %d-%d s (Epic)" % (SPEC["min_s"], SPEC["max_s"]), "%.2f s" % dur)
     size_mb = path.stat().st_size / 1048576.0
-    check(size_mb < 400, "size < 400 MB", "%.1f MB" % size_mb)
+    check(size_mb < SPEC["max_mb"], "size < %d MB" % SPEC["max_mb"], "%.1f MB" % size_mb)
+    if path.suffix.lower() == ".mov":
+        check(video is not None and video.get("codec_name") == "prores", "MOV is ProRes (Epic delivery format)", str((video or {}).get("codec_name")))
+        check(audio is not None and str(audio.get("codec_name", "")).startswith("pcm_") and int(audio.get("channels") or 0) == 2,
+              "MOV audio uncompressed (PCM) stereo", "%s, %s ch" % ((audio or {}).get("codec_name"), (audio or {}).get("channels")))
+    else:
+        print("INFO  Epic publishing asks for MOV + ProRes: upload the *_prores.mov twin of this file")
 
     if video is not None:
         num, _, den = str(video.get("avg_frame_rate", "0/1")).partition("/")

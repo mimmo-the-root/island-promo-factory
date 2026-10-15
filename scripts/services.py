@@ -89,7 +89,7 @@ def start_console(slug, port=None, open_browser=True):
         pass
     log = open(ROOT / "last_console.log", "w", encoding="utf-8")
     env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8", PROMO_PROJECTS_DIR=str(pp.projects_dir()))
-    cmd = [str(pp.find_python()), str(Path(__file__).resolve().parent / "dashboard.py"), "--project", slug, "--port", str(port), "--no-open", "--idle-min", os.environ.get("PROMO_CONSOLE_IDLE_MIN", "30")]
+    cmd = [str(pp.find_python()), str(Path(__file__).resolve().parent / "dashboard.py"), "--project", slug, "--port", str(port), "--no-open", "--name", "island-promo-factory", "--idle-min", os.environ.get("PROMO_CONSOLE_IDLE_MIN", "30")]
     proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env, creationflags=FLAGS_DETACHED, close_fds=True)
     for _ in range(40):
         time.sleep(0.5)

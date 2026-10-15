@@ -6,7 +6,7 @@ vignette, end card with the island logo, optional age-rating (ESRB) / "Developed
 badges (video-only). Frames are rendered with Pillow and piped to ffmpeg
 (libx264 + AAC). Output: Projects/<map>/final/trailer.mp4 (1920x1080, 30 fps).
 
-Env: PROMO_PROJECT, PROMO_TRAILER_SECONDS (10-40, default 20),
+Env: PROMO_PROJECT, PROMO_TRAILER_SECONDS (15-30 as Epic asks, default 20),
      PROMO_BADGE_MODE=full|ends (default full), FFMPEG_PATH, PROMO_DEBUG=1.
 """
 import json
@@ -22,6 +22,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+import epic_specs
 import promo_project as pp
 import title_composer as tc
 
@@ -349,9 +350,10 @@ def main():
     try:
         total = float(os.environ.get("PROMO_TRAILER_SECONDS", "20"))
     except ValueError:
-        die("PROMO_TRAILER_SECONDS must be a number (10-40)")
-    if not 10 <= total <= 40:
-        die("PROMO_TRAILER_SECONDS=%s out of range (allowed 10-40)" % total)
+        die("PROMO_TRAILER_SECONDS must be a number (15-30)")
+    lo_s, hi_s = epic_specs.video_seconds()
+    if not lo_s <= total <= hi_s:
+        die("PROMO_TRAILER_SECONDS=%s out of range (Epic asks %d-%d s)" % (total, lo_s, hi_s))
     badge_mode = os.environ.get("PROMO_BADGE_MODE", "full").lower()
     if badge_mode not in ("full", "ends"):
         die("PROMO_BADGE_MODE must be 'full' or 'ends'")
@@ -518,7 +520,7 @@ def main():
     else:
         cmd += ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"]
     af = "afade=t=in:st=0:d=1,afade=t=out:st=%.2f:d=2,alimiter=limit=0.89" % (total - 2) if music else "anull"
-    cmd += ["-map", "0:v", "-map", "1:a", "-af", af, "-t", "%.3f" % total,
+    cmd += ["-map", "0:v", "-map", "1:a", "-af", af, "-vf", pp.BT709_VF, "-t", "%.3f" % total,
             *pp.h264_args(ffmpeg, CRF),
             "-r", str(FPS), "-movflags", "+faststart", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
             "-f", "mp4", str(scratch)]

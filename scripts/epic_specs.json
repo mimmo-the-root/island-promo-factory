@@ -1,0 +1,46 @@
+{
+  "verified": "2026-10-15",
+  "note": "Values taken from Epic's own pages on the date above. Always check them again before uploading: Epic changes them.",
+  "mandatory_from": "2026-10-22",
+  "sources": {
+    "thumbnails_and_videos": "https://dev.epicgames.com/documentation/fortnite/making-thumbnails-and-videos-in-fortnite-creative",
+    "promotional_media": "https://dev.epicgames.com/documentation/fortnite/promotional-media-screen-in-fortnite",
+    "thumbnail_policies": "https://dev.epicgames.com/documentation/fortnite/thumbnail-image-policies",
+    "lobby_background": "https://dev.epicgames.com/documentation/fortnite/lobby-background-image-guidelines-in-fortnite-creative",
+    "replays": "https://dev.epicgames.com/documentation/fortnite/replays-feature-in-fortnite-creative",
+    "developer_rules_log": "https://legal.epicgames.com/fortnite/developer-rules-change-log"
+  },
+  "images": {
+    "landscape": {"size": [1920, 1080], "max_mb": 5, "variants": ["with_logo", "art_only"], "formats": ["png", "jpg"]},
+    "portrait": {"size": [1440, 1920], "max_mb": 5, "variants": ["with_logo", "art_only"], "formats": ["png", "jpg"]},
+    "logo": {"size": [1440, 608], "max_mb": 3, "formats": ["png"], "mode": "RGBA", "max_mb_note": "kit limit; Epic's page gives no size"},
+    "lobby": {"size": [2048, 1024], "max_mb": 10, "formats": ["png", "jpg"]},
+    "safe_area_px": 200
+  },
+  "video": {
+    "min_s": 15,
+    "max_s": 30,
+    "width": 1920,
+    "height": 1080,
+    "aspect": "16:9",
+    "delivery_container": "mov",
+    "delivery_codec": "prores",
+    "audio": "uncompressed (PCM), stereo",
+    "frame_rate": "native, never changed",
+    "max_mb": 400,
+    "max_mb_note": "kit limit from the earlier portal; Epic's page gives no size or resolution"
+  },
+  "forbidden_in_thumbnails": [
+    "blood of any kind", "targeted gunfire, bullet impacts on a character or bullet trails to a head",
+    "guns pointed at the viewer or at a character's head", "crosshair over a face or head",
+    "threat, dread or terror (grotesque creatures)", "sexualized depictions",
+    "V-Bucks, real currency, Fortnite coins", "level-up messaging, XP amounts, AFK, coin farm, coin slide",
+    "assets, weapons or devices not available on the island", "platform-specific buttons or controls",
+    "Epic logos, product names or key art", "photographs of real people", "another developer's thumbnail or a near copy"
+  ],
+  "ga_trailer_forbidden": [
+    "sexualized depictions of characters", "strong threat, dread or terror (jump scares, grotesque creatures)",
+    "characters realistically reacting to being hurt", "characters visibly hit, hurt or killed by gunfire or explosions",
+    "blood of any kind"
+  ]
+}

@@ -145,6 +145,73 @@ def apply_zip(data, root, version_hint=""):
     return new_ver, changed, added, (backup if changed else None), z
 
 
+LOCK_STALE = 90
+
+
+class Lock:
+    """Single writer for update/sync: .kit-sync.lock (a lock older than 90 s is stale and taken over)."""
+    def __init__(self, root):
+        self.f = Path(root) / ".kit-sync.lock"
+
+    def __enter__(self):
+        try:
+            if self.f.exists() and time.time() - self.f.stat().st_mtime < LOCK_STALE:
+                raise SystemExit("Another update/sync is running (.kit-sync.lock). Try again in a minute.")
+            self.f.write_text(str(time.time()), encoding="utf-8")
+        except OSError:
+            pass
+        return self
+
+    def __exit__(self, *a):
+        try:
+            self.f.unlink()
+        except OSError:
+            pass
+
+
+def _busy(proj):
+    """True when a run is in progress for this map (fresh run_status.json in state running)."""
+    try:
+        import json
+        d = json.loads((proj / "final" / "run_status.json").read_text(encoding="utf-8"))
+        return d.get("state") == "running" and time.time() - d.get("updated", 0) < 120
+    except Exception:
+        return False
+
+
+def _restart_consoles(root):
+    """Restart every live console of an older version, unless a run is in progress on that map."""
+    try:
+        import json
+        import promo_project as pp
+        import services
+        for cfg in pp.projects_dir().glob("*/final/console.json"):
+            slug = cfg.parent.parent.name
+            try:
+                info = json.loads(cfg.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            if not services.up(info.get("url", "") + "/api/variants"):
+                continue
+            if _busy(cfg.parent.parent):
+                print("Console of '%s' left running (a run is in progress): close it and reopen it after the run." % slug)
+                continue
+            services.stop_console(slug)
+            services.start_console(slug, open_browser=False)
+            print("Console of '%s' restarted on the new version." % slug)
+    except Exception as e:
+        print("Console restart skipped (%s)" % e)
+
+
+def _post_update(root, old, new, n):
+    """Marker read by the next session start: 'kit updated vA -> vB: N files'."""
+    try:
+        import json
+        (Path(root) / ".post-update").write_text(json.dumps({"from": old, "to": new, "files": n}), encoding="utf-8")
+    except OSError:
+        pass
+
+
 def _sync_claude(root):
     """Mirror scripts/claude_kit/ into .claude/ (skills, commands, start-up hook)."""
     try:
@@ -227,7 +294,8 @@ def main():
         prune(root)
     except Exception as e:
         print("Stage area skipped (%s)" % e)
-    new_ver, changed, added, backup, z = apply_zip(data, root)
+    with Lock(root):
+        new_ver, changed, added, backup, z = apply_zip(data, root)
     if not V.is_newer(new_ver, cur) and not a.force:
         print("The zip holds v%s, which is not newer than v%s. Nothing applied beyond identical files." % (new_ver, cur))
     print("\nUPDATED to v%s: %d file(s) replaced, %d added." % (new_ver, changed, added))
@@ -236,13 +304,15 @@ def main():
     print("Not touched: Projects/, Resources/brand/, Resources/badges/, models, logs.")
     print("Roll back any time: update.bat --rollback   (stored copies: update.bat --list)")
     _sync_claude(root)
+    _post_update(root, cur, new_ver, changed + added)
+    _restart_consoles(root)
     try:
         text = (root / "CHANGELOG.md").read_text(encoding="utf-8")
         for v, title, body in V.changelog_between(text, cur, new_ver):
             print("\n== v%s - %s ==\n%s" % (v, title, body))
     except OSError:
         pass
-    print("\nRestart the dashboard / close this window before the next run.")
+    print("\nOpen a NEW Claude Code session to load the updated skills.")
 
 
 if __name__ == "__main__":

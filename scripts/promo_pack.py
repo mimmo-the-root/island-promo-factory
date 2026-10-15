@@ -19,6 +19,7 @@ from pathlib import Path
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import epic_specs as es  # noqa: E402
 import promo_project as pp  # noqa: E402
 
 EPIC_DISCLAIMER = (
@@ -34,13 +35,15 @@ DISCLAIMER = (
 )
 
 # (output name, source relative to project, size, max MB, mode or None, required)
+# sizes and limits come from epic_specs.json; since 2026-10-22 landscape, portrait (each with and without logo) and the logo are all mandatory
+_L, _P, _G, _B = es.image("landscape"), es.image("portrait"), es.image("logo"), es.image("lobby")
 ITEMS = [
-    ("01_landscape_with_text_1920x1080.png", "final/thumbnail_horizontal_title.png", (1920, 1080), 5, None, True),
-    ("02_landscape_art_only_1920x1080.png", "final/thumbnail_horizontal.png", (1920, 1080), 5, None, False),
-    ("03_portrait_with_text_1440x1920.png", "final/thumbnail_vertical_title.png", (1440, 1920), 5, None, False),
-    ("04_portrait_art_only_1440x1920.png", "final/thumbnail_vertical.png", (1440, 1920), 5, None, False),
-    ("05_logo_1440x608.png", "final/island_logo.png", (1440, 608), 3, "RGBA", False),
-    ("06_lobby_background_2048x1024.png", "background/lobby_background.png", (2048, 1024), 10, None, False),
+    ("01_landscape_with_text_%dx%d.png" % _L["size"], "final/thumbnail_horizontal_title.png", _L["size"], _L["max_mb"], None, True),
+    ("02_landscape_art_only_%dx%d.png" % _L["size"], "final/thumbnail_horizontal.png", _L["size"], _L["max_mb"], None, True),
+    ("03_portrait_with_text_%dx%d.png" % _P["size"], "final/thumbnail_vertical_title.png", _P["size"], _P["max_mb"], None, True),
+    ("04_portrait_art_only_%dx%d.png" % _P["size"], "final/thumbnail_vertical.png", _P["size"], _P["max_mb"], None, True),
+    ("05_logo_%dx%d.png" % _G["size"], "final/island_logo.png", _G["size"], _G["max_mb"], _G["mode"], True),
+    ("06_lobby_background_%dx%d.png" % _B["size"], "background/lobby_background.png", _B["size"], _B["max_mb"], None, False),
 ]
 
 
@@ -202,14 +205,27 @@ def main():
              "## Ready (generated)"]
     for name, size, mb, required in ready:
         lines.append(f"- [x] {name} - {size[0]}x{size[1]}, {mb:.2f} MB" + (" - REQUIRED" if required else ""))
-    todo = {"gameplay": "- [ ] Gameplay video: 1920x1080, MP4/MKV/WEBM/MOV, < 400 MB, 10-40 s, REAL unedited gameplay incl. game UI "
-                        "(put a recording in captures/gameplay/ and run scripts/video_extract.py)",
+    vs = es.video()
+    todo = {"gameplay": "- [ ] Gameplay video: %dx%d, MOV ProRes (the *_prores.mov file), %d-%d s, REAL unedited gameplay incl. game UI and the pre-game lobby "
+                        "(put a recording in captures/gameplay/ and run scripts/video_extract.py)" % (vs["width"], vs["height"], vs["min_s"], vs["max_s"]),
             "screenshots": "- [ ] In-game screenshots (up to 3): 1920x1080, PNG/JPEG, < 5 MB, real gameplay",
             "trailer": "- [ ] Trailer (optional): run scripts/trailer_builder.py"}
     lines += ["", "## Manual (real captures, cannot be generated)"]
     lines += [todo[k] for k in ("gameplay", "screenshots", "trailer") if k in manual]
     lines += [f"- [ ] NOT VALIDATED (ffprobe missing): {n} - install ffmpeg and rerun the promo pack" for n in unvalidated]
     lines += ["- [ ] Check the gameplay and screenshots really show the game (the portal requires real footage, in-game UI visible)"]
+    lines += ["", "## Epic rules (checked %s; mandatory thumbnail types from %s)" % (es.SPECS["verified"], es.SPECS["mandatory_from"]),
+              "- Landscape and portrait thumbnails (each with logo and art-only) and the island logo are all required. Videos: MOV ProRes, %d-%d s, 16:9." % (vs["min_s"], vs["max_s"]),
+              "- Sources: " + ", ".join("%s" % u for u in es.SPECS["sources"].values()),
+              "", "## Look at every picture and video before uploading: NONE of these may appear"]
+    lines += ["- [ ] " + x for x in es.SPECS["forbidden_in_thumbnails"]]
+    lines += ["", "Trailer eligible for the Hero carousel (general audience) must also avoid:"] + ["- [ ] " + x for x in es.SPECS["ga_trailer_forbidden"]]
+    lines += ["", "## Recording better footage (Epic: Replays)",
+              "- Fortnite settings: Fullscreen, Quality Preset Epic, Record Replays + Record Creative Mode Replays on, Music volume 0, HUD Info Type None (unless you want HUD messages).",
+              "- In the replay: Drone Free camera, Time of Day set and paused for good light (a brighter scene beats a dark one), High Quality FX on, storm effects off, Hide all controls (Esc twice to bring them back).",
+              "- Replays stop working after a season or chapter update: record before the update.",
+              "- Gameplay video for Discover requests: no text, edits, extra music or voice; show the pre-game lobby; Epic's licensed music only.",
+              "- Source: " + es.SPECS["sources"]["replays"]]
     if not star_wars:
         lines += ["", "## Island description", "- [ ] Optional: paste island_description_disclaimer.txt (Epic Games notice) at the end of the island description",
                   "- Suggested wording, not an official Epic text: if your island uses licensed IP, follow that IP holder's brand rules instead (set ip.disclaimer in config.json)"]

@@ -82,7 +82,7 @@ def main():
     py = sys.executable
     server, port = mock_comfyui.start()
     env = dict(os.environ, PROMO_PROJECT="smoke", COMFY_URL="http://127.0.0.1:%d" % port, PYTHONIOENCODING="utf-8",
-               PROMO_TRAILER_SECONDS="12")
+               PROMO_TRAILER_SECONDS="16")
     env.pop("PROMO_PLAN_B", None)
     t0 = time.time()
     print("temp copy: %s | mock ComfyUI on port %d" % (root, port))
@@ -463,6 +463,18 @@ def main():
     check(_gp._ai_montage_track(20.0, 1, adir / "x.wav") is None, "montage: music_engine=synth keeps the old synthesiser path")
     del os.environ["PROMO_MUSIC_ENGINE"]
 
+    # trailer colour: piped RGB frames are converted with the BT.709 matrix and the stream is tagged (players decode untagged HD as BT.709)
+    import promo_project as pp
+    if shutil.which("ffmpeg") and shutil.which("ffprobe"):
+        _t709 = tmp / "t709.mp4"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", "64x64", "-r", "10", "-i", "-", "-vf", pp.BT709_VF,
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(_t709)], input=bytes([200, 30, 30]) * (64 * 64 * 10), check=True)
+        _tags = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=color_space,color_range,color_primaries,color_transfer",
+                                "-of", "csv=p=0", str(_t709)], capture_output=True, text=True).stdout.strip()
+        _px = subprocess.run(["ffmpeg", "-v", "error", "-i", str(_t709), "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout[:3]
+        check("bt709" in _tags and "tv" in _tags and all(abs(a - b) <= 3 for a, b in zip(_px, (200, 30, 30))), "trailer colour: BT.709 matrix and tags (%s)" % _tags)
+        check("pp.BT709_VF" in (REPO / "scripts" / "trailer_builder.py").read_text(encoding="utf-8"), "trailer encode uses the BT.709 filter")
+
     # default skin: a map without a character gets a random one from Resources/Characters, a map with its own keeps it
     import importlib
     from PIL import Image as _Im
@@ -517,6 +529,21 @@ def main():
           "session_end hook stops the console of every map on exit")
     st = json.loads((REPO / "scripts" / "claude_kit" / "settings.json").read_text(encoding="utf-8"))
     check("island_session_end" in json.dumps(st.get("hooks", {}).get("SessionEnd", [])), "kit settings carry the SessionEnd hook")
+
+    # Epic specs (October 2026 rules) are the single source for validator, pack and docs
+    import epic_specs as _es
+    _v = _es.video()
+    check(tuple(_es.video_seconds()) == (15, 30), "epic specs: video 15-30 s")
+    _vt = (REPO / "scripts" / "video_validate.py").read_text(encoding="utf-8")
+    check("epic_specs" in _vt and "prores" in _vt.lower(), "video_validate reads the Epic specs and checks ProRes for .mov")
+    _pk = (REPO / "scripts" / "promo_pack.py").read_text(encoding="utf-8")
+    check("epic_specs" in _pk and "portrait" in _pk.lower(), "promo_pack reads the Epic specs (landscape + portrait)")
+    check("crosshair" in (REPO / "Resources" / "prompts" / "qwen_negative_horizontal.txt").read_text(encoding="utf-8"), "Qwen negative prompt carries Epic forbidden content")
+    import update as _up, tempfile as _tf
+    with _tf.TemporaryDirectory() as _d:
+        with _up.Lock(_d):
+            check((Path(_d) / ".kit-sync.lock").exists(), "update lock is taken")
+        check(not (Path(_d) / ".kit-sync.lock").exists(), "update lock is released")
 
     server.shutdown()
     print("\n%d check(s) failed, %.0f s" % (len(FAILS), time.time() - t0))

@@ -38,3 +38,6 @@ Save all three: `PY intake.py --project <slug> --init --style STYLE --mood MOOD 
 
 ## 4. Verify
 Run `PY intake.py --project <slug>` (add `--json` if you want to parse it). Fix every **BLOCK** with the user, mention every **WARN** (ComfyUI off = no AI artwork; start it with `PY services.py comfy` or use `--no-qwen`). Repeat until it prints **READY**, then hand back to `island-promo`.
+
+## 5. Recording gameplay (Epic: Replays) - tell the user once
+Epic wants real, unedited gameplay with the UI and the pre-game lobby, 15-30 s. In Replays: Drone Free camera, Time of Day set, storm off, High Quality FX, hide controls; record before updating the island.

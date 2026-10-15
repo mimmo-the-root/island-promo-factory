@@ -208,6 +208,7 @@ def build(ffmpeg, video, moments, total, dest, music_path, seed, source_duration
         cmd += ["-i", str(music_path), "-filter_complex", graph, "-map", "[v]", "-map", "%d:a" % n]
         cmd += pp.h264_args(ffmpeg, 20) + ["-r", "30", "-af", "afade=t=in:st=0:d=0.1,afade=t=out:st=%.3f:d=1.2,apad" % (out_total - 1.2),
                                            "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-t", "%.3f" % out_total,
+                                           "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv",
                                            "-movflags", "+faststart", str(dest)]
         _run(cmd)
     return {"segments": [{"start": s, "end": round(s + nd, 3), "speed": sp} for s, nd, sp in segs], "bpm": bpm,
@@ -270,6 +271,7 @@ def build_scenes(ffmpeg, video, moments, total, dest, music_path, seed, source_d
         cmd += ["-i", str(music_path), "-filter_complex", ";".join(chain), "-map", "[v]", "-map", "%d:a" % n]
         cmd += pp.h264_args(ffmpeg, 20) + ["-r", "30", "-af", "afade=t=in:st=0:d=0.1,afade=t=out:st=%.3f:d=1.2" % (total - 1.2),
                                            "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-t", "%.3f" % total,
+                                           "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv",
                                            "-movflags", "+faststart", str(dest)]
         _run(cmd)
     return {"segments": [{"start": s, "end": round(s + nd, 3), "speed": 1.0} for s, nd in segs], "bpm": bpm, "seed": seed,
