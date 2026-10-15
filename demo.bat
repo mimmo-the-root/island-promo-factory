@@ -8,5 +8,5 @@ if exist "%PF%..\ComfyUI_windows_portable\python_embeded\python.exe" set "PY=%PF
 set "PD=%PF%Projects"
 if exist "%PF%..\Projects" set "PD=%PF%..\Projects"
 if defined PROMO_PROJECTS_DIR set "PD=%PROMO_PROJECTS_DIR%"
-if not exist "%PD%\demo\config.json" "%PY%" "%PF%scripts\make_demo.py"
-call "%PF%run_all.bat" demo --no-qwen
+"%PY%" "%PF%scripts\make_demo.py"
+call "%PF%run_all.bat" demo --no-qwen --social

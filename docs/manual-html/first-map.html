@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your first map &middot; Island Promo Factory Manual</title><link rel="stylesheet" href="manual.css"></head><body><div class="shell"><nav class="rail rail-w" aria-label="Chapters"><div class="rail-brand">Island Promo Factory<small>Manual &middot; kit v1.1.24</small></div><a class="rail-home" href="index.html">Manual home</a>
+<a class="rail-home" href="whatsnew.html">What's new</a>
+<div class="rail-part">Part 1 · Start here</div>
+<a class="rail-link" href="welcome.html"><span class="rail-n">01</span>Welcome</a>
+<a class="rail-link" href="quick-start.html"><span class="rail-n">02</span>Quick start</a>
+<a class="rail-link" href="install.html"><span class="rail-n">03</span>Install</a>
+<a class="rail-link on" href="first-map.html"><span class="rail-n">04</span>Your first map</a>
+<div class="rail-part">Part 2 · Use it every day</div>
+<a class="rail-link" href="run-and-rerun.html"><span class="rail-n">05</span>Run and rerun</a>
+<a class="rail-link" href="the-console.html"><span class="rail-n">06</span>The console</a>
+<a class="rail-link" href="whats-in-the-pack.html"><span class="rail-n">07</span>What you get, slot by slot</a>
+<a class="rail-link" href="music.html"><span class="rail-n">08</span>Music</a>
+<a class="rail-link" href="recording-gameplay.html"><span class="rail-n">09</span>Recording good gameplay</a>
+<a class="rail-link" href="social-videos.html"><span class="rail-n">10</span>Social videos</a>
+<a class="rail-link" href="your-team.html"><span class="rail-n">11</span>Your team (agents and models)</a>
+<a class="rail-link" href="update.html"><span class="rail-n">12</span>Update</a>
+<div class="rail-part">Part 3 · Rules and help</div>
+<a class="rail-link" href="epic-rules.html"><span class="rail-n">13</span>Epic rules</a>
+<a class="rail-link" href="troubleshooting.html"><span class="rail-n">14</span>Troubleshooting</a>
+<a class="rail-link" href="faq.html"><span class="rail-n">15</span>FAQ</a>
+<div class="rail-part">Part 4 · Reference</div>
+<a class="rail-link" href="glossary.html"><span class="rail-n">16</span>Glossary</a>
+<a class="rail-link" href="about.html"><span class="rail-n">17</span>About</a></nav><details class="rail rail-m"><summary>Chapters</summary><a class="rail-home" href="index.html">Manual home</a>
+<a class="rail-home" href="whatsnew.html">What's new</a>
+<div class="rail-part">Part 1 · Start here</div>
+<a class="rail-link" href="welcome.html"><span class="rail-n">01</span>Welcome</a>
+<a class="rail-link" href="quick-start.html"><span class="rail-n">02</span>Quick start</a>
+<a class="rail-link" href="install.html"><span class="rail-n">03</span>Install</a>
+<a class="rail-link on" href="first-map.html"><span class="rail-n">04</span>Your first map</a>
+<div class="rail-part">Part 2 · Use it every day</div>
+<a class="rail-link" href="run-and-rerun.html"><span class="rail-n">05</span>Run and rerun</a>
+<a class="rail-link" href="the-console.html"><span class="rail-n">06</span>The console</a>
+<a class="rail-link" href="whats-in-the-pack.html"><span class="rail-n">07</span>What you get, slot by slot</a>
+<a class="rail-link" href="music.html"><span class="rail-n">08</span>Music</a>
+<a class="rail-link" href="recording-gameplay.html"><span class="rail-n">09</span>Recording good gameplay</a>
+<a class="rail-link" href="social-videos.html"><span class="rail-n">10</span>Social videos</a>
+<a class="rail-link" href="your-team.html"><span class="rail-n">11</span>Your team (agents and models)</a>
+<a class="rail-link" href="update.html"><span class="rail-n">12</span>Update</a>
+<div class="rail-part">Part 3 · Rules and help</div>
+<a class="rail-link" href="epic-rules.html"><span class="rail-n">13</span>Epic rules</a>
+<a class="rail-link" href="troubleshooting.html"><span class="rail-n">14</span>Troubleshooting</a>
+<a class="rail-link" href="faq.html"><span class="rail-n">15</span>FAQ</a>
+<div class="rail-part">Part 4 · Reference</div>
+<a class="rail-link" href="glossary.html"><span class="rail-n">16</span>Glossary</a>
+<a class="rail-link" href="about.html"><span class="rail-n">17</span>About</a></details><main class="page"><div class="crumb"><a href="index.html">Manual</a> / Chapter 04</div><div class="chapter-num">04</div><h1>Your first map</h1><p class="lede">A map is a folder in <code>Projects\</code> with your files and a <code>config.json</code>. The kit works on one map at a time.</p>
+<h2 id="create-it">Create it</h2>
+<p>Run <code>new_map.bat my-map &quot;MY MAP TITLE&quot; --style NEON</code>. With Claude Code, <code>/promo-pack</code> asks for everything and creates it for you.</p>
+<h2 id="put-your-files-in">Put your files in</h2>
+<div class="tablewrap"><table><thead><tr><th>File</th><th>What it is</th></tr></thead><tbody><tr><td><code>background\background.png</code></td><td>The environment, no characters, at least 1920 px wide</td></tr><tr><td><code>characters\character_01.png</code></td><td>One character, transparent PNG with margin on every side</td></tr><tr><td><code>captures\gameplay\&lt;recording&gt;.mp4</code></td><td>Your gameplay recording, ideally 5 minutes or more (optional, needed for video and screenshots)</td></tr></tbody></table></div>
+<p>Then edit <code>config.json</code>: the island code (format 1234-5678-9012), the title, the title style (SCI_FI, HORROR, FIRE, ICE, NEON, GOLD or WHITE) and one sentence describing the character.</p>
+<h2 id="no-character-yet">No character yet?</h2>
+<p>Choosing is explicit, nothing is picked silently: your own skin in <code>characters\</code>, a random one from <code>Resources\Characters\</code> (<code>python scripts\default_skin.py --project my-map --random</code>), or none (<code>--none</code>). Epic&#x27;s official renders are at brand.epicgames.com/document/469; download them yourself.</p>
+<h2 id="check-before-you-run">Check before you run</h2>
+<p><code>python scripts\intake.py --project my-map</code> lists every BLOCK and WARN. It also checks that the title font can draw your title and island code. When it prints READY, go to <a href="run-and-rerun.html">Run and rerun</a>.</p>
+<nav class="pn"><a class="pn-prev" href="install.html"><small>Previous</small>Install</a><a class="pn-next" href="run-and-rerun.html"><small>Next</small>Run and rerun</a></nav><footer class="foot">Island Promo Factory v1.1.24 &middot; <a href="https://github.com/mimmo-the-root/island-promo-factory" target="_blank" rel="noopener">GitHub repo</a> &middot; <a href="https://mimmo-the-root.github.io/island-promo-factory/" target="_blank" rel="noopener">Documentation</a> &middot; <a href="https://github.com/mimmo-the-root/island-promo-factory/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a> (free to use, copy and change, no warranty) &middot; by <a href="https://x.com/mimmo_the_root" target="_blank" rel="noopener">@mimmo_the_root</a> on X<br>Unofficial tool, not affiliated with Epic Games. Fortnite and Unreal Editor for Fortnite are trademarks of Epic Games, Inc. <a href="whatsnew.html">What's new</a></footer></main></div></body></html>

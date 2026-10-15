@@ -49,3 +49,4 @@ _releases/
 .last_seen_version
 .post-update
 .kit-sync.lock
+!docs/demo/*.mp4

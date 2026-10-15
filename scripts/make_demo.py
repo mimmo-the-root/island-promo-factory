@@ -157,6 +157,92 @@ def compose_artwork(bg, ch):
     return art.convert("RGB")
 
 
+REC_NAME = "demo_recording.mp4"
+REC_SECONDS, REC_FPS, REC_W, REC_H = 60, 24, 1280, 720
+BURSTS = (14.0, 32.0, 48.0)          # seconds where the fictional fight peaks: lots of motion and loud audio
+
+
+def recording(project):
+    """A short fictional gameplay recording made by a script (no game, no third-party content): the sentinel runs through the
+    arena and three fights burst with sparks, flashes and a camera shake. It gives the demo a real source video, so the whole pack
+    (portal gameplay cut, trailer moments, screenshots, social videos) is produced offline."""
+    import subprocess
+    import tempfile
+    import wave
+
+    import video_tools as vt
+    ffmpeg, _ = vt.require_tools()
+    out_dir = project / "captures" / "gameplay"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / REC_NAME
+    bg = Image.open(project / "background" / "background.png").convert("RGB")
+    ch = Image.open(project / "characters" / "character_01.png").convert("RGBA")
+    ch = ch.crop(ch.getbbox())
+    ph = int(REC_H * 0.62)
+    ch = ch.resize((int(ch.width * ph / ch.height), ph), Image.LANCZOS)
+    pad = 240                                                  # extra width so the camera can pan
+    bg = bg.resize((REC_W + pad, REC_H), Image.LANCZOS)
+    rnd = random.Random(11)
+    sr = 22050
+    n = REC_SECONDS * sr
+    t = np.arange(n) / sr
+    audio = 0.10 * np.sin(2 * math.pi * 55 * t) + 0.05 * np.sin(2 * math.pi * 110 * t + np.sin(t))
+    audio += 0.03 * np.sin(2 * math.pi * 220 * t) * (np.sin(2 * math.pi * 0.5 * t) > 0)
+    noise = np.random.RandomState(3).uniform(-1, 1, n)
+    for b in BURSTS:
+        env = np.clip(1 - np.abs(t - (b + 3)) / 3.2, 0, 1) ** 1.5
+        audio += 0.55 * noise * env
+    audio = np.clip(audio, -1, 1)
+    with tempfile.TemporaryDirectory() as td:
+        wav = _P(td) / "a.wav"
+        with wave.open(str(wav), "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(sr)
+            w.writeframes((audio * 32000).astype("<i2").tobytes())
+        cmd = [ffmpeg, "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", "%dx%d" % (REC_W, REC_H), "-r", str(REC_FPS),
+               "-i", "-", "-i", str(wav)] + pp.h264_args(ffmpeg, crf=22) + ["-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", str(out)]
+        pr = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        sparks = []
+        for f in range(REC_SECONDS * REC_FPS):
+            tt = f / REC_FPS
+            near = max([max(0.0, 1 - abs(tt - (b + 3)) / 3.2) for b in BURSTS])          # 0 calm .. 1 fight peak
+            sx = int(rnd.uniform(-1, 1) * 22 * near)
+            sy = int(rnd.uniform(-1, 1) * 14 * near)
+            pan = int((math.sin(tt / 4.0) * 0.5 + 0.5) * pad)
+            frame = bg.crop((pan, 0, pan + REC_W, REC_H)).copy()
+            d = ImageDraw.Draw(frame)
+            for k in range(7):                                  # floor lines rushing toward the camera
+                yy = int(REC_H * 0.80 + ((tt * (2.2 + near * 2) + k / 7) % 1) ** 1.6 * REC_H * 0.2)
+                d.line([(0, yy), (REC_W, yy)], fill=(150, 90, 220), width=2)
+            bob = int(math.sin(tt * (7 + near * 5)) * (8 + near * 10))
+            cx = int(REC_W * (0.30 + 0.22 * math.sin(tt / 6.0) + 0.12 * near))
+            frame.paste(ch, (cx - ch.width // 2, int(REC_H * 0.34) + bob), ch)
+            if near > 0.15:
+                for _ in range(int(14 * near)):
+                    sparks.append([cx + 60, REC_H * 0.5, rnd.uniform(-9, 9), rnd.uniform(-12, 2), 1.0])
+            nxt = []
+            for sp in sparks:
+                sp[0] += sp[2]
+                sp[1] += sp[3]
+                sp[3] += 0.8
+                sp[4] -= 0.07
+                if sp[4] > 0:
+                    r = 3 + int(5 * sp[4])
+                    d.ellipse([sp[0] - r, sp[1] - r, sp[0] + r, sp[1] + r], fill=(255, int(120 + 120 * sp[4]), 80))
+                    nxt.append(sp)
+            sparks = nxt
+            if near > 0.8 and f % 6 < 2:                       # flashes
+                frame = Image.blend(frame, Image.new("RGB", frame.size, (255, 240, 220)), 0.35)
+            if sx or sy:
+                frame = ImageChops.offset(frame, sx, sy)
+            pr.stdin.write(frame.tobytes())
+        pr.stdin.close()
+        if pr.wait() != 0 or not out.exists():
+            raise SystemExit("could not make the demo recording")
+    return out
+
+
 def main():
     def arg(name):
         return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else None
@@ -164,7 +250,12 @@ def main():
     force = "--force" in sys.argv
     project = pp.projects_dir() / "demo"
     if project.exists() and not force:
-        raise SystemExit("%s already exists (use --force to rebuild the art)." % project)
+        if (project / "background" / "background.png").exists() and not (project / "captures" / "gameplay" / REC_NAME).exists():
+            recording(project)                                  # maps made by an older demo: only add the recording
+            print("demo recording added: %s" % (project / "captures" / "gameplay" / REC_NAME))
+        else:
+            print("%s already exists (use --force to rebuild the art)." % project)
+        return
     for sub in ("input", "background", "characters", "final", "title"):
         (project / sub).mkdir(parents=True, exist_ok=True)
     if arg("--background") and arg("--character"):
@@ -203,6 +294,7 @@ def main():
     if r.returncode != 0 or not (project / "final" / "artwork_vertical.png").exists():
         print((r.stdout + r.stderr)[-1500:])
         raise SystemExit("could not build the vertical art for the demo")
+    recording(project)
     print("demo map created: %s" % project)
     print("next: run_all.bat demo --no-qwen   (no GPU or models needed)")
 

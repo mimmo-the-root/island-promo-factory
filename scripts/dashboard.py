@@ -125,7 +125,7 @@ if(!shownSheet){$("sheet").src="/pack/lightbox.png?t="+Date.now();shownSheet=tru
 $("files").innerHTML=d.files.filter(f=>f.name!=="lightbox.png").map(f=>`<a href="/pack/${encodeURIComponent(f.name)}" download><b>${f.name}</b><span>${f.mb} MB</span></a>`).join("")}
 }catch(e){}}
 async function ver(){try{window._stale=0;try{const k=await (await fetch("/api/kit")).json();if(k.stale){window._stale=1;const u=$("upd");u.style.display="block";u.textContent="Kit updated to v"+k.disk+" (this console runs v"+k.running+"). When the run is finished, close this console and reopen it."}}catch(e){}const v=await (await fetch("/api/version")).json();
-$("ver").textContent="v"+v.version;
+$("ver").textContent="v"+v.version;$("fver").textContent="v"+v.version;
 const u=$("upd");if(window._stale){}else if(v.newer){u.style.display="block";u.textContent="Update available: v"+v.latest+" (you have v"+v.version+"). When this run is finished, close the window and run update.bat."}else{u.style.display="none"}}catch(e){}}
 tick();setInterval(tick,1000);ver();setInterval(ver,600000);
 const TOKEN="__TOKEN__";
@@ -142,7 +142,9 @@ async function mkVar(n){await fetch("/api/variant?name="+n,{method:"POST",header
 varTick();setInterval(varTick,2500);
 
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("a[href]");if(a&&!a.hasAttribute("download")&&a.getAttribute("href")[0]!=="#"){a.target="_blank";a.rel="noopener"}},true);
-</script></main></body></html>"""
+</script>
+<footer style="margin:28px 0 8px;padding-top:14px;border-top:1px solid var(--line,#2a2f45);color:var(--dim);font-size:12px;line-height:1.7"><b>Island Promo Factory</b> <span id="fver"></span> &middot; <a href="https://github.com/mimmo-the-root/island-promo-factory">GitHub repo</a> &middot; <a href="/manual/">Manual</a> &middot; <a href="/manual/whatsnew.html">What's new</a> &middot; MIT License &middot; by <a href="https://x.com/mimmo_the_root">@mimmo_the_root</a> on X<br>Unofficial tool, not affiliated with, endorsed or sponsored by Epic Games. Fortnite and Unreal Editor for Fortnite are trademarks of Epic Games, Inc.</footer>
+</main></body></html>"""
 
 
 LAST_REQUEST = [time.time()]   # last time any page / API call reached the server (idle shutdown)
@@ -340,6 +342,19 @@ def make_handler(proj):
                         f = listing.get(parts[1])          # only names that really exist in the folder; request text never reaches a path
                         if f and f.suffix.lower() in IMG_EXT:
                             return self.send(200, f.read_bytes(), "image/png")
+            if path == "/whatsnew":
+                self.send_response(302)
+                self.send_header("Location", "/manual/whatsnew.html")
+                self.end_headers()
+                return
+            if path == "/manual" or path.startswith("/manual/"):
+                mdir = ROOT / "docs" / "manual-html"
+                name = path[len("/manual/"):] or "index.html"
+                f = {x.name: x for x in mdir.glob("*") if x.is_file()}.get(name)      # only names that exist in the folder
+                ct = {".html": "text/html; charset=utf-8", ".css": "text/css", ".png": "image/png"}
+                if f and f.suffix.lower() in ct:
+                    return self.send(200, f.read_bytes(), ct[f.suffix.lower()])
+                return self.send(404, b"not found", "text/plain")
             if path == "/api/kit":
                 disk = V.read_version()
                 return self.send(200, json.dumps({"running": START_VERSION, "disk": disk, "stale": disk != START_VERSION}).encode("utf-8"), "application/json")

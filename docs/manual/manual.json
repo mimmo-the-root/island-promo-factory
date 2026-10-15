@@ -1,0 +1,62 @@
+{
+  "title": "Island Promo Factory: the manual",
+  "intro": "Everything the Fortnite Creator Portal asks for your UEFN island, built on your own PC. Start with the quick start, or jump to the chapter you need.",
+  "parts": [
+    {
+      "title": "Part 1 · Start here",
+      "chapters": [
+        "welcome",
+        "quick-start",
+        "install",
+        "first-map"
+      ]
+    },
+    {
+      "title": "Part 2 · Use it every day",
+      "chapters": [
+        "run-and-rerun",
+        "the-console",
+        "whats-in-the-pack",
+        "music",
+        "recording-gameplay",
+        "social-videos",
+        "your-team",
+        "update"
+      ]
+    },
+    {
+      "title": "Part 3 · Rules and help",
+      "chapters": [
+        "epic-rules",
+        "troubleshooting",
+        "faq"
+      ]
+    },
+    {
+      "title": "Part 4 · Reference",
+      "chapters": [
+        "glossary",
+        "about"
+      ]
+    }
+  ],
+  "summaries": {
+    "welcome": "What the kit is, what it does for you, what it does not do.",
+    "quick-start": "A complete demo kit in about fifteen minutes.",
+    "install": "Full, Light or Remote ComfyUI: pick one and run the doctor.",
+    "first-map": "Create a map, add your files, choose a skin, run the intake.",
+    "run-and-rerun": "One command, cheap reruns, the flags you will use.",
+    "the-console": "The live page: progress, results, social section, variants.",
+    "whats-in-the-pack": "Every file of the promo pack and its portal slot.",
+    "music": "Your own, AI or Licensed Music Box.",
+    "recording-gameplay": "Replay settings and what to record.",
+    "social-videos": "Optional vertical videos with English subtitles.",
+    "your-team": "The seven agents and the token rules.",
+    "update": "Update, roll back, and what happens after.",
+    "epic-rules": "The rules the kit checks, from one source.",
+    "troubleshooting": "Symptoms and fixes.",
+    "faq": "Short answers.",
+    "glossary": "The words used in the kit.",
+    "about": "Author, license, links."
+  }
+}

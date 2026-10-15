@@ -6,6 +6,8 @@ python scripts/release.py check
 if ($LASTEXITCODE -ne 0) { throw "VERSION / CHANGELOG mismatch" }
 $ver = (Get-Content VERSION -Raw).Trim()
 $title = (python scripts/release.py notes | Select-Object -First 1)
+python scripts/build_manual.py
+if ($LASTEXITCODE -ne 0) { throw "The manual has problems (see PROBLEM lines above)" }
 if (-not (Test-Path .git)) { git init -b main }
 git add -A
 git commit -m "v${ver}: $title"

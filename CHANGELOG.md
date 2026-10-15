@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.24 — HTML manual, demo with real gameplay, GitHub Pages
+
+- New manual (17 chapters, English) built from `docs/manual/*.md` by `scripts/build_manual.py` into `docs/manual-html/`: no external resources, checked for broken links, anchors and images (`build_manual.py --check`, also in the tests). Includes a "What's new" page generated from this changelog and a process diagram.
+- The console serves it at `/manual/` (and `/whatsnew`) and every page has a footer: repo, manual, what's new, MIT, author, "not affiliated with Epic" notice and the version.
+- The demo map now includes a script-made fictional gameplay recording (`captures/gameplay/demo_recording.mp4`), so `demo.bat` produces the whole pack offline: thumbnails, logo, lobby, gameplay, trailer, lightbox and the optional social videos. Older demo maps get the recording added the next time `demo.bat` runs.
+- `scripts/publish_demo.py` turns the finished demo into small previews in `docs/demo/`; `scripts/make_screenshots.py` rebuilds the manual screenshots from the demo (headless Chromium), so they are reproducible.
+- GitHub Pages (`.github/workflows/pages.yml`) publishes the manual and the demo previews; `publish.ps1` rebuilds the manual before every commit.
+
 ## v1.1.23 — Faster reruns: a stage is redone only when something upstream changed
 
 - Per-stage cache (`scripts/stage_cache.py`, stored in `Projects/<map>/final/stage_cache.json`): images, trailer, promo pack and lightbox are skipped when the SHA-256 of their inputs (files, kit version, relevant flags) is unchanged and their outputs are still there. Change a title, a character, a clip or the music and only the stages downstream of it run again.

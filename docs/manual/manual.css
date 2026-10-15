@@ -1,0 +1,67 @@
+/* Island Promo Factory manual - shared stylesheet. System fonts, no external assets, no JavaScript. */
+:root{
+  --paper:#f6f7fb; --card:#ffffff; --ink:#1b2233; --mute:#5d6678; --line:#dfe3ee;
+  --blue:#c0267a; --blue-soft:#fde8f3; --teal:#0e8fa8; --amber:#b86a00; --amber-soft:#fff3df; --red:#c23a3a; --red-soft:#fdeaea; --green:#1f8a4c; --green-soft:#e6f6ec;
+  --code-bg:#eef1f8; --pre-bg:#111726; --pre-ink:#d8e1f5;
+  --display:Georgia,'Times New Roman',serif; --body:'Segoe UI',system-ui,-apple-system,sans-serif; --mono:'Cascadia Code',Consolas,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#0c111d; --card:#131a2a; --ink:#e4e9f5; --mute:#97a1b8; --line:#243049;
+  --blue:#ff7ac0; --blue-soft:#33142a; --teal:#22e1ff; --amber:#ffb454; --amber-soft:#2b2110; --red:#ff7a7a; --red-soft:#2d1717; --green:#5fd18b; --green-soft:#12281c;
+  --code-bg:#1a2338; --pre-bg:#080c15; --pre-ink:#d8e1f5;}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.shell{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
+.rail{background:var(--card);border-right:1px solid var(--line);padding:22px 16px 28px;font-size:14px}
+.rail-w{position:sticky;top:0;align-self:start;height:100vh;overflow:auto}
+.rail-m{display:none}
+.rail-brand{font-family:var(--display);font-size:20px;font-weight:700;line-height:1.2;margin:0 6px 16px}
+.rail-brand img{vertical-align:middle;margin-right:8px;border-radius:6px}
+.hero{display:block;width:100%;max-width:560px;height:auto;margin:0 0 22px}
+.rail-brand small{display:block;font-family:var(--body);font-weight:400;font-size:12px;color:var(--mute);margin-top:4px}
+.rail-home,.rail-link{display:block;padding:6px 8px;border-radius:6px;color:var(--ink)}
+.rail-home:hover,.rail-link:hover{background:var(--blue-soft);text-decoration:none}
+.rail-home.on,.rail-link.on{background:var(--blue-soft);color:var(--blue);font-weight:600}
+.rail-part{margin:18px 8px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.rail-n{display:inline-block;width:26px;color:var(--mute);font-variant-numeric:tabular-nums}
+.page{max-width:820px;width:100%;margin:0 auto;padding:44px 28px 70px}
+.crumb{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.crumb a{color:var(--mute)}
+.chapter-num{font-family:var(--display);font-size:92px;font-weight:700;line-height:.9;color:var(--blue-soft);margin-bottom:-14px;user-select:none}
+h1{font-family:var(--display);font-size:38px;line-height:1.15;margin:0 0 14px}
+h2{font-family:var(--display);font-size:26px;line-height:1.25;margin:2.1em 0 .5em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:18px;margin:1.6em 0 .4em}
+.lede{font-size:19px;color:var(--mute);margin:0 0 1.4em}
+p{margin:0 0 1em}
+ul{padding-left:1.3em;margin:0 0 1em}li{margin:.3em 0}
+code{font-family:var(--mono);font-size:.88em;background:var(--code-bg);padding:.1em .35em;border-radius:4px}
+pre{background:var(--pre-bg);color:var(--pre-ink);padding:14px 16px;border-radius:8px;overflow:auto;font-size:14px;line-height:1.5;margin:0 0 1.2em}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+img{max-width:100%;border-radius:8px;border:1px solid var(--line)}
+hr{border:0;border-top:1px solid var(--line);margin:2em 0}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0 0 1.2em}
+.steps li{counter-increment:s;position:relative;padding:2px 0 2px 46px;margin:0 0 .9em;min-height:32px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px}
+.callout{border-left:4px solid var(--blue);background:var(--blue-soft);border-radius:0 8px 8px 0;padding:10px 16px;margin:0 0 1.2em}
+.callout p{margin:0}.callout-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;color:var(--blue)}
+.callout.tip{border-color:var(--teal);background:var(--green-soft)}.callout.tip .callout-label{color:var(--teal)}
+.callout.warning{border-color:var(--red);background:var(--red-soft)}.callout.warning .callout-label{color:var(--red)}
+.callout.checkpoint{border-color:var(--green);background:var(--green-soft)}.callout.checkpoint .callout-label{color:var(--green)}
+.tablewrap{overflow:auto;margin:0 0 1.2em}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--card);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
+.toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:0 0 1.5em}
+.toc-card{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--ink)}
+.toc-card:hover{border-color:var(--blue);text-decoration:none}
+.toc-n{display:block;font-family:var(--mono);font-size:12px;color:var(--mute)}.toc-t{display:block;font-weight:600;margin:2px 0}.toc-s{display:block;font-size:14px;color:var(--mute)}
+.pn{display:flex;justify-content:space-between;gap:14px;margin-top:3em}
+.pn a{display:block;max-width:48%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;color:var(--ink)}
+.pn a:hover{border-color:var(--blue);text-decoration:none}.pn small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.pn-next{text-align:right;margin-left:auto}
+.foot{margin-top:3.5em;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--mute);line-height:1.8}
+@media (max-width:900px){
+  .shell{display:block}.rail-w{display:none}.rail-m{display:block;border-right:0;border-bottom:1px solid var(--line);padding:10px 16px}
+  .rail-m summary{cursor:pointer;font-weight:600;padding:6px 0}.page{padding:26px 18px 50px}h1{font-size:30px}.chapter-num{font-size:64px}}
+@media print{.rail{display:none}.shell{display:block}.page{max-width:none;padding:0}a{color:inherit}.pn{display:none}}

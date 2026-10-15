@@ -160,5 +160,17 @@ with tempfile.TemporaryDirectory() as d:
 ra2 = (ROOT / "scripts" / "run_all.py").read_text(encoding="utf-8")
 check("--no-cache" in ra2 and "sc.hit(" in ra2 and "sc.store(" in ra2, "run_all uses the stage cache (--no-cache forces)")
 
+# v1.1.24: manual, console route, footer, demo recording
+import subprocess as _sp
+_r = _sp.run([sys.executable, str(ROOT / "scripts" / "build_manual.py"), "--check"], capture_output=True, text=True)
+check(_r.returncode == 0, "manual: committed HTML is current and passes the lint (links, anchors, images, no external resources, version)\n" + (_r.stdout + _r.stderr)[-600:])
+_ver = (ROOT / "VERSION").read_text().strip()
+check("v" + _ver in (ROOT / "docs" / "manual-html" / "index.html").read_text(encoding="utf-8"), "manual: footer carries the current version")
+_db = (ROOT / "scripts" / "dashboard.py").read_text(encoding="utf-8")
+check('"/manual"' in _db and "whatsnew" in _db and "not affiliated" in _db and 'id="fver"' in _db, "console: /manual/ route and footer (repo, MIT, disclaimer, version)")
+_md = (ROOT / "scripts" / "make_demo.py").read_text(encoding="utf-8")
+check("def recording(" in _md and "demo_recording.mp4" in _md, "demo: makes a script-made gameplay recording")
+check((ROOT / ".github" / "workflows" / "pages.yml").exists() and "build_manual.py" in (ROOT / "publish.ps1").read_text(encoding="utf-8"), "pages workflow exists and publish.ps1 rebuilds the manual")
+
 print("\n%d check(s) failed" % len(fails))
 sys.exit(1 if fails else 0)
