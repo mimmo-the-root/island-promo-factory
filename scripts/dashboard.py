@@ -107,6 +107,7 @@ const fmt=s=>{s=Math.max(0,Math.round(s));const m=Math.floor(s/60);return m+":"+
 const esc=t=>t.replace(/&/g,"&amp;").replace(/</g,"&lt;");
 function cls(l){if(/FAILED|ERROR|Traceback/.test(l))return"bad";if(/WARNING/.test(l))return"wr";if(/^\s*(---|=+)|RUNNING:/.test(l))return"hd";if(/SUCCESS|OK:|READY|done|PASS|written/.test(l))return"ok";return""}
 async function tick(){try{const d=await (await fetch("/api/status")).json();const st=d.state||"idle";
+if(window._map&&window._map!==d.map){location.reload();return}window._map=d.map;   /* another map is being served on this address: drop everything this page remembers */
 $("map").textContent=d.map||"";{const c=$("code");if(d.island_code){c.style.display="block";c.textContent="ISLAND "+d.island_code}else{c.style.display="none"}}$("badge").className="badge "+st;$("btxt").textContent=st==="running"?"RUNNING":st==="done"?(d.kind==="activity"?"STEP DONE":"COMPLETE"):st==="failed"?"FAILED":"IDLE";
 $("pct").textContent=Math.round((d.pct||0)*100)+"%";$("el").textContent=fmt(d.elapsed||d.total||0);
 $("eta").textContent=st==="running"?(d.eta==null?"--:--":"~"+fmt(d.eta)):st==="done"?"0:00":"--:--";
@@ -120,7 +121,7 @@ if(d.latest){const key=d.latest.rel+"@"+d.latest.mtime;if(key!==lastLive){lastLi
 $("rec").hidden=st!=="running";
 const g=d.gallery||[];$("gal").innerHTML=g.map(a=>`<a href="/img?rel=${encodeURIComponent(a.rel)}" target="_blank" rel="noopener"><img loading="lazy" src="/thumb?rel=${encodeURIComponent(a.rel)}&t=${a.mtime}"><small>${a.name}</small></a>`).join("");
 if(st==="done"&&d.files&&d.files.length){const r=$("result");r.hidden=false;if(!won){r.classList.add("win");won=true}
-if(!shownSheet){$("sheet").src="/pack/lightbox.png?t="+Date.now();shownSheet=true}
+if(!shownSheet){$("sheet").src="/pack/lightbox.png?m="+encodeURIComponent(d.map||"")+"&t="+Date.now();shownSheet=true}
 {const sc=$("social");sc.hidden=false;const has=d.social&&d.social.length,sr=(d.social_run||{}).state||"idle";$("szip").hidden=!has;$("sfiles").innerHTML=has?d.social.map(f=>`<a href="/social/${encodeURIComponent(f.name)}" download><b>${f.name}</b><span>${f.mb} MB</span></a>`).join(""):"";const b=$("sbtn");b.disabled=sr==="running";b.textContent=sr==="running"?"WORKING...":has?"MAKE THE SOCIAL VIDEOS AGAIN":"CREATE SOCIAL VIDEOS";$("snote").textContent=sr==="running"?"Making the 9:16 videos (about half a minute)...":sr==="failed"?"The social step failed: "+((d.social_run.log||[]).slice(-1)[0]||"see last_social.log"):has?"Ready. Edit Projects/<map>/social.json to change the texts, then make them again.":"Your kit is ready. Social videos are an extra: vertical 9:16 with English promotional subtitles."}
 $("files").innerHTML=d.files.filter(f=>f.name!=="lightbox.png").map(f=>`<a href="/pack/${encodeURIComponent(f.name)}" download><b>${f.name}</b><span>${f.mb} MB</span></a>`).join("")}
 }catch(e){}}

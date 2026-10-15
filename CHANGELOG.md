@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.25 — Manual and demo pictures from a real map, console no longer mixes two maps
+
+- The manual screenshots and the `docs/demo/` previews now come from the demo map with its own (Fortnite-style) art instead of the drawn placeholder, so the documentation shows what a real kit looks like. `make_screenshots.py` also saves the result card (`console-result.png`), waits for every thumbnail and hides the log (it contains this machine's paths).
+- Console: if the address starts serving another map (for example after a restart on the same port for a different project), the open page reloads itself instead of keeping the old lightbox and result card next to the new map's data.
+
 ## v1.1.24 — HTML manual, demo with real gameplay, GitHub Pages
 
 - New manual (17 chapters, English) built from `docs/manual/*.md` by `scripts/build_manual.py` into `docs/manual-html/`: no external resources, checked for broken links, anchors and images (`build_manual.py --check`, also in the tests). Includes a "What's new" page generated from this changelog and a process diagram.

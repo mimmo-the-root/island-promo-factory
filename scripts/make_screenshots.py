@@ -4,7 +4,7 @@ import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(_
 Usage: make_screenshots.py [--project demo] [--out docs/manual/images]
 Needs: the demo map already built (demo.bat, or make_demo.py + run_all --no-qwen --social) and `pip install playwright` with a
 Chromium (in the cloud container PLAYWRIGHT_BROWSERS_PATH is already set; never run `playwright install` there).
-Result: console-done.png, console-social.png (lowercase names: build_manual.py only accepts those).
+Result: console-done.png, console-result.png, console-social.png (lowercase names: build_manual.py only accepts those).
 The console is started on a private port from this script and stopped at the end; the maker's own consoles are not touched.
 """
 import argparse
@@ -45,8 +45,12 @@ def main():
             pg = b.new_page(viewport={"width": 1280, "height": 1500}, device_scale_factor=1)
             pg.goto(base + "/")
             pg.wait_for_selector("#result:not([hidden])", timeout=30000)
-            pg.wait_for_timeout(1500)
+            pg.evaluate("document.querySelectorAll('img[loading=lazy]').forEach(i=>{i.loading='eager'})")
+            pg.wait_for_function("[...document.images].every(i=>i.complete&&i.naturalWidth>0)", timeout=30000)
+            pg.evaluate("(()=>{const l=document.getElementById('log');const c=l&&l.closest('.card');if(c)c.style.visibility='hidden'})()")   # the log holds this machine's paths
+            pg.wait_for_timeout(1000)
             pg.screenshot(path=str(out / "console-done.png"))
+            pg.locator("#result").screenshot(path=str(out / "console-result.png"))
             soc = pg.locator("#social")
             soc.scroll_into_view_if_needed()
             pg.wait_for_timeout(500)

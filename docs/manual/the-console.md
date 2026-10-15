@@ -6,7 +6,7 @@ Open it with `dashboard.bat my-map`, or with `/promo-console` in Claude Code.
 
 ## When the run is done
 
-![The result card: lightbox and downloads](console-done.png)
+![The result card: lightbox and downloads](console-result.png)
 
 The result card has two clearly separated sections. **Creator Portal files** are the numbered files you upload to the portal. **Social media videos** is an optional extra with its own button and its own ZIP; those files never go to the portal.
 
