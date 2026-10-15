@@ -10,5 +10,6 @@ description: Island Promo Factory final review - inspect every output, write RUN
 3. Write `Projects/<slug>/RUN_REPORT.md`: map, seed, look, what is in the pack, anything imperfect, what the user must do by hand.
 4. Open the pack folder for the user in Windows Explorer (`powershell -NoProfile -Command Start-Process explorer.exe "<absolute path of promo_pack>"`). Say that `final/` only holds working files and that the numbered files (01-09, gameplay and trailer included) to upload are in `promo_pack/`.
    Tell the user (short, in their language): where the pack is, the three things to check in the portal, and that the island description needs the notice from `island_description_disclaimer.txt`.
-5. Mention the gameplay policy: the pack has the edited montage unless `--gameplay-look off` was used; if the portal rejects it, rebuild the unedited cut and retry.
-6. Stop. The next map starts only after the user reports whether the portal accepted this one.
+5. Mention the gameplay policy: slot 07 is the real, unedited cut (what Epic asks for); record it with the Replay settings in the checklist.
+6. **Optional social step, ONLY after the kit is delivered**: ask the user ONE question: "Do you also want the social media videos (vertical 9:16 with English promotional subtitles)?". If yes: have `social-copywriter` draft `social.json` (or use the drafts `social_video.py` writes), show the texts, wait for approval, then run `PY social_video.py --project <slug>` (about 30 s; the console has the same button). The files go to `promo_pack/social/`, never to the portal. If no: do nothing more.
+7. Stop. The next map starts only after the user reports whether the portal accepted this one.

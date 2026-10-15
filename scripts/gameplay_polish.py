@@ -40,7 +40,7 @@ MIN_SEGMENTS = 4
 
 
 def _run(cmd):
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    r = pp.run_alive(cmd, "gameplay polish")
     if r.returncode != 0:
         print("ERROR: ffmpeg failed:\n%s" % r.stderr.strip()[-1800:])
         sys.exit(1)

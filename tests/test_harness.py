@@ -82,7 +82,50 @@ with tempfile.TemporaryDirectory() as d:
 # --- console: kit bar + costs page exist, doctor --fix exists
 dash = (ROOT / "scripts" / "dashboard.py").read_text(encoding="utf-8")
 check("/api/kit" in dash and "START_VERSION" in dash and '"/costs"' in dash, "console has the kit-updated bar and the costs page")
+check("/social.zip" in dash and "d[\"social\"]" in dash and "NOT for the Creator Portal" in dash, "console separates Creator Portal files from social files")
 check("--fix" in (ROOT / "scripts" / "doctor.py").read_text(encoding="utf-8"), "doctor has --fix")
+
+# --- v1.1.22: similarity, font check, heartbeat, licensed music, unedited gameplay slot, latest-result.json
+import similarity  # noqa: E402
+import font_check  # noqa: E402
+import promo_project as _pp  # noqa: E402
+with tempfile.TemporaryDirectory() as d:
+    d = Path(d)
+    import numpy as _np
+    rng = _np.random.RandomState(1)
+    base = (rng.rand(54, 96, 3) * 255).astype("uint8")
+    other = (rng.rand(54, 96, 3) * 255).astype("uint8")
+    Image.fromarray(base).resize((960, 540)).save(d / "a.png")
+    Image.fromarray(base).resize((1920, 1080)).save(d / "a2.png")      # same picture, other size
+    Image.fromarray(other).resize((960, 540)).save(d / "b.png")
+    def prof(name, f, skin):
+        pr = d / name
+        (pr / "promo_pack").mkdir(parents=True)
+        shutil.copy(d / f, pr / "promo_pack" / "02_landscape_art_only_1920x1080.png")
+        (pr / "config.json").write_text(json.dumps({"default_skin": skin, "style": "NEON"}), encoding="utf-8")
+        return similarity.profile(pr)
+    pa, pa2, pb = prof("m1", "a.png", "Skin X"), prof("m2", "a2.png", "Skin X"), prof("m3", "b.png", "Skin Y")
+    res = similarity.compare(pa, [pa2, pb])
+    check(any(l == "WARN" and "m2" in m for l, m in res) and not any("m3" in m and l == "WARN" for l, m in res), "similarity: the same picture is a WARN, an unrelated one is not")
+    check(any("same skin" in m for l, m in res), "similarity: the same skin on two maps is reported")
+ff = font_check.font_files()
+check(bool(ff) and font_check.check("Crazy Race", "4194-7202-1504")[1] == [], "font_check: title and island code can be drawn")
+check(font_check.check("Crazy \u9f8d", "1234", ff[-1:])[1] == ["\u9f8d"], "font_check: a character the font cannot draw is reported")
+import io as _io, contextlib as _cl
+_buf = _io.StringIO()
+with _cl.redirect_stdout(_buf):
+    _r = _pp.run_alive([sys.executable, "-c", "import time; time.sleep(1.3)"], "test", every=0.4)
+check(_r.returncode == 0 and "still working" in _buf.getvalue(), "run_alive: a long command prints a heartbeat")
+ra_src = (ROOT / "scripts" / "run_all.py").read_text(encoding="utf-8")
+check("music_source" in ra_src and "licensed" in ra_src and "latest-result.json" in ra_src and '"similarity"' in ra_src, "run_all: licensed music, similarity stage, latest-result.json")
+ve_src = (ROOT / "scripts" / "video_extract.py").read_text(encoding="utf-8")
+check("gameplay_montage.mp4" in ve_src and '"unedited": True' in ve_src, "video_extract: slot 07 is the unedited cut, the montage is a separate file")
+check("gameplay_montage_1920x1080.mp4" in (ROOT / "scripts" / "promo_pack.py").read_text(encoding="utf-8"), "promo_pack puts the montage in social/, not in the portal files")
+
+# --- social is optional: not in the kit run, a console button, the bot asks after the kit
+check('"--social"' in ra_src and "optional: add --social" in ra_src and "not a.social" in ra_src, "run_all: social content is optional (--social), the kit holds the unedited cut only")
+check("/api/social" in dash and "mkSocial" in dash and "CREATE SOCIAL VIDEOS" in dash, "console: button to create the social videos")
+check("Optional social step" in (ROOT / "scripts" / "claude_kit" / "skills" / "island-review" / "SKILL.md").read_text(encoding="utf-8"), "island-review: asks about the social videos AFTER the kit")
 
 print("\n%d check(s) failed" % len(fails))
 sys.exit(1 if fails else 0)

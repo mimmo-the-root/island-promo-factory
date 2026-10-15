@@ -1,8 +1,18 @@
 # Changelog
 
+## v1.1.22 — Real gameplay for the portal, similarity pre-check, clearer console
+
+- Portal gameplay (slot 07) is now ONE continuous UNEDITED cut of your recording with the original audio and game UI (what Epic asks for, 15–30 s). The polished montage (our music, grade, dissolves) becomes `gameplay_montage.mp4`, delivered only in `promo_pack/social/`.
+- Social content is OPTIONAL and comes after the kit: `run_all` makes only the portal kit (no montage, no 9:16 videos) unless you add `--social`. The console shows a "CREATE SOCIAL VIDEOS" button once the kit is done, and the bot (island-review skill) asks after delivering the kit whether you want them, then has the texts approved before generating.
+- Console: "Creator Portal files" and "Social media videos" are separate sections (own colour, own ZIP), so social files are never uploaded to the portal by mistake.
+- New `similarity.py` (stage after the lightbox, never blocks): compares the thumbnail with your other maps (perceptual hash, brightness, palette, skin) and warns about look-alikes and repeated skins; writes `final/visual_profile.json` and `final/similarity.json`.
+- Font check in intake: warns when the title font cannot draw a character of the title or the island code.
+- Licensed Music Box option for Discover requests: `"music_source": "licensed"` in config.json — put the track in `audio/music.*`; the kit generates no music and builds no montage.
+- Long ffmpeg steps print "still working (N s)" every 30 s (`PROMO_HEARTBEAT`). Every full run writes `final/latest-result.json` (state, stages, portal files, social files, similarity findings) for agents and scripts.
+
 ## v1.1.21 — Vertical social videos with English promo subtitles
 
-- New `scripts/social_video.py` (last stage of `run_all`): 9:16 1080x1920 videos for TikTok, Reels and Shorts in `promo_pack/social/` (not for the Creator Portal), made from the finished trailer: blurred full-screen background, sharp clip below the top safe area, burned-in English subtitles (hook, selling points, call to action with the island code) in the middle band, clear of the app's bottom bar and right-hand buttons. 15–30 s, BT.709 tagged, cuts snap to the music's beats.
+- New `scripts/social_video.py` (last stage of `run_all`; optional from v1.1.22): 9:16 1080x1920 videos for TikTok, Reels and Shorts in `promo_pack/social/` (not for the Creator Portal), made from the finished trailer: blurred full-screen background, sharp clip below the top safe area, burned-in English subtitles (hook, selling points, call to action with the island code) in the middle band, clear of the app's bottom bar and right-hand buttons. 15–30 s, BT.709 tagged, cuts snap to the music's beats.
 - Texts live in `Projects/<map>/social.json` (variants A/B). Without it two neutral DRAFT variants are written from `config.json`; the `social-copywriter` agent can improve them and you approve them. A `.srt` and `captions.txt` (description + hashtags per platform) come with each video. A broken encode never replaces a good file.
 
 ## v1.1.20 — Cheap agents, token rules, console and start-up messages

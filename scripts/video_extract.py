@@ -39,7 +39,7 @@ VF_FIT = "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow
 
 
 def run(cmd):
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    r = pp.run_alive(cmd, "video cut")
     if r.returncode != 0:
         print("ERROR: ffmpeg failed:\n%s" % r.stderr.strip()[-1500:])
         sys.exit(1)
@@ -271,6 +271,11 @@ def main():
         dest = d / "gameplay.mp4"
         if polish and polish_moments:
             import gameplay_polish as gpol
+            # Epic: the portal's gameplay video must be REAL, UNEDITED footage. So gameplay.mp4 (slot 07) is one continuous cut with the
+            # original audio; the polished montage (our music, grade, dissolves) is built as gameplay_montage.mp4 for the social media.
+            real_dest = dest
+            dest = d / "gameplay_montage.mp4"
+            archive(d, "gameplay_montage.*", stamp)
             seed = args.music_seed if args.music_seed is not None else sum(map(ord, pp.project_name())) % 100000
             if scenes:
                 info_p = gpol.build_scenes(ffmpeg, video, polish_moments, polish_seconds, dest,
@@ -284,6 +289,15 @@ def main():
                 print("gameplay: %s MONTAGE of %d real segments (grade, zoom, speed changes, beat-synced cuts), original audio "
                       "replaced by our generated music -> %s" % (args.gameplay_look.upper(), len(info_p["segments"]), dest))
                 meta = {"mode": "montage", "polished": True, "source": video.name, **info_p}
+            lo_s, hi_s = 15.0, 30.0
+            L = min(max(float(args.gameplay_seconds), lo_s), hi_s, info["duration"])
+            m0, m1 = polish_moments[0]
+            st = min(max((m0 + m1) / 2 - L / 2, 0.0), max(0.0, info["duration"] - L))
+            cut(ffmpeg, video, st, st + L, real_dest, crf=16)
+            print("gameplay (portal, slot 07): %s-%s, ONE continuous UNEDITED cut with the original audio -> %s" % (vt.fmt_time(st), vt.fmt_time(st + L), real_dest))
+            meta = {"mode": "single", "unedited": True, "segments": [{"start": round(st, 2), "end": round(st + L, 2)}], "source": video.name,
+                    "montage_file": dest.name, "montage": meta}
+            dest = real_dest
         elif mont_segs:
             build_montage(ffmpeg, video, mont_segs, dest)
             print("gameplay: MONTAGE of %d real segments (%s), hard cuts, no effects -> %s" % (

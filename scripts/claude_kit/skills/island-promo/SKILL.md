@@ -32,5 +32,5 @@ For a NEW map ask, right after island code and title (plain text, one question):
 - Never delete the user's files: move them to a `_to_delete_*` folder and say so.
 - Debug output behind `PROMO_DEBUG=1`.
 - Legal: never add Epic/Fortnite/third-party art, fonts or badges to the repo; the age-rating (ESRB) and "Developed in Fortnite" badges are video-only and never distorted; music is the generated one or the user's own.
-- The portal's gameplay slot may require real, unedited gameplay. The default look is cinematic (edited); `--gameplay-look off` gives the unedited cut. Tell the user which one is in the pack.
+- The portal's gameplay slot (07) is ALWAYS the real, unedited cut with the original audio (15-30 s). The edited montage and the 9:16 videos are an optional social extra: never part of the kit run unless the user asks (`--social`, the console button, or the question at the end of island-review).
 - Versioning: when you change kit code, bump `VERSION` (`PY release.py bump patch|minor`), fill the CHANGELOG entry, run `PY release.py check` and `PY ../tests/smoke_test.py` before telling the user it is done.

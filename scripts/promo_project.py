@@ -93,6 +93,27 @@ def plan_b_default(proj=None):
         return "bust"
 
 
+def run_alive(cmd, label="ffmpeg", every=None):
+    """subprocess.run(capture_output) that prints 'label: still working (N s)' every `every` s (default 30, PROMO_HEARTBEAT) so a long
+    encode is never mistaken for a hang. Returns the CompletedProcess."""
+    import subprocess
+    import threading
+    import time
+    every = every or float(os.environ.get("PROMO_HEARTBEAT", "30"))
+    done = threading.Event()
+    t0 = time.time()
+
+    def beat():
+        while not done.wait(every):
+            print("  %s: still working (%d s)" % (label, time.time() - t0), flush=True)
+    th = threading.Thread(target=beat, daemon=True)
+    th.start()
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True)
+    finally:
+        done.set()
+
+
 def project_dir():
     return projects_dir() / project_name()
 

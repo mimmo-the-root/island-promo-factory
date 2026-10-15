@@ -212,6 +212,11 @@ def main():
     social = load_social(proj, cfg)
     out_dir = proj / "promo_pack" / "social"
     out_dir.mkdir(parents=True, exist_ok=True)
+    for stale in out_dir.glob("*.part.mp4"):          # left by an interrupted encode
+        try:
+            stale.unlink()
+        except OSError:
+            pass
     beats = beats_for(proj)
     bad = 0
     for v in social["variants"]:

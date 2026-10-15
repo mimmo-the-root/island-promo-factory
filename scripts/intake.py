@@ -212,6 +212,20 @@ def main():
     except Exception as e:
         add("WARN", "skin check failed: %s" % e)
     check_config(proj, cfg)
+    try:   # the title font must be able to draw the title and the island code
+        import font_check
+        _fn, _miss = font_check.check(str(cfg.get("title", "")), str(cfg.get("island_code", "")))
+        add("WARN" if _miss else "OK", "title font %s%s" % (_fn, (" cannot draw: " + " ".join(_miss)) if _miss else " draws the title and the island code"),
+            "change the title, or put a font with these characters in Resources/brand/font/")
+    except Exception as e:
+        add("WARN", "font check failed: %s" % e)
+    if cfg.get("music_source") == "licensed":     # Discover request: the Licensed Music Box track is supplied by the user
+        _au = proj / "audio"
+        if not (_au.is_dir() and any(f.stem.lower() == "music" for f in _au.iterdir())):
+            add("BLOCK", "music_source is 'licensed' but audio/music.* is missing",
+                "put the Licensed Music Box track the user chose in Projects/%s/audio/ as music.mp3 (or .wav); the kit will not generate music" % proj.name)
+        else:
+            add("OK", "Licensed Music Box track found: the kit uses it and generates no music")
     check_images(proj, cfg)
     check_video(proj)
     check_engine()

@@ -125,10 +125,16 @@ def main():
         if (proj / "captures" / "analysis" / "candidates.json").exists():
             c0 = json.loads((proj / "captures" / "analysis" / "candidates.json").read_text())["candidates"][0]
             check(25 <= c0["start"] <= 36, "top moment is the busy burst (start=%.1f s)" % c0["start"])
-        rc, out = run(py, ["scripts/video_extract.py", str(vid), "--auto", "--clips", "2", "--gameplay-seconds", "12"], env, root)
+        rc, out = run(py, ["scripts/video_extract.py", str(vid), "--auto", "--clips", "2", "--gameplay-seconds", "20", "--gameplay-scenes", "2"], env, root, timeout=300)
+        if rc != 0:
+            print(out[-1500:])
         check((proj / "captures" / "clips" / "clip_01.mp4").exists(), "video_extract cuts clips")
         check((proj / "captures" / "screenshots" / "screenshot_01.png").exists(), "video_extract grabs screenshots")
         check((proj / "captures" / "gameplay" / "gameplay.mp4").exists(), "video_extract cuts the gameplay segment")
+        _gm = proj / "captures" / "gameplay"
+        _meta = json.loads((_gm / "gameplay.json").read_text(encoding="utf-8")) if (_gm / "gameplay.json").exists() else {}
+        check((_gm / "gameplay_montage.mp4").exists() and _meta.get("unedited") is True and _meta.get("montage_file") == "gameplay_montage.mp4",
+              "gameplay slot is the UNEDITED cut; the polished montage is a separate file for the social media")
         rc, out = run(py, ["scripts/trailer_builder.py"], env, root, timeout=900)
         check(rc == 0 and (proj / "final" / "trailer.mp4").exists(), "trailer_builder builds trailer.mp4 with clips + island code")
         if rc != 0:

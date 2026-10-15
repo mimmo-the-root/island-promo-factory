@@ -78,6 +78,7 @@ main{position:relative;max-width:1240px;margin:0 auto;padding:22px 18px 70px}
 .sheet img{width:100%;border-radius:10px;border:1px solid var(--line)}
 .files{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px;margin:14px 0}
 .files a{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--txt);text-decoration:none}
+.soc{margin-top:22px;padding:14px 16px;border:1px dashed var(--c3);border-radius:12px}.soc .files a{border-color:var(--c3)}.btn.soc{display:inline-block;margin:0;padding:12px 20px;border:0;background:var(--c3);color:#06070b}
 .files a:hover{border-color:var(--c1)}.files span{color:var(--dim);white-space:nowrap}
 .btn{display:inline-block;background:linear-gradient(90deg,var(--c1),var(--c3));color:#06070b;font-weight:800;padding:14px 24px;border-radius:12px;text-decoration:none;letter-spacing:.04em}
 .vrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;margin-top:12px}
@@ -98,7 +99,8 @@ main{position:relative;max-width:1240px;margin:0 auto;padding:22px 18px 70px}
 <div class="note" id="vnote">Generate a different version of the images to A/B test thumbnails. Version A (the files above) is never touched.</div>
 <div class="vrow" id="vrow"></div></div>
 <div id="result" class="card" hidden><h3>KIT LIGHTBOX</h3><div class="sheet"><a href="/pack/lightbox.png" target="_blank" rel="noopener"><img id="sheet" alt="kit lightbox"></a></div>
-<h3 style="margin-top:18px">DOWNLOAD</h3><div class="files" id="files"></div><a class="btn" href="/pack.zip">DOWNLOAD EVERYTHING (ZIP)</a> <a class="btn" style="background:transparent;color:var(--c1);border:1px solid var(--c1)" href="/pack/lightbox.png" download>DOWNLOAD THE LIGHTBOX (PNG)</a></div>
+<h3 style="margin-top:18px">CREATOR PORTAL FILES <small style="color:var(--dim);font-weight:400">upload these on the Fortnite Creator Portal</small></h3><div class="files" id="files"></div><a class="btn" href="/pack.zip">DOWNLOAD EVERYTHING (ZIP)</a> <a class="btn" style="background:transparent;color:var(--c1);border:1px solid var(--c1)" href="/pack/lightbox.png" download>DOWNLOAD THE LIGHTBOX (PNG)</a>
+<div id="social" class="soc" hidden><h3>SOCIAL MEDIA VIDEOS <small style="color:var(--dim);font-weight:400">optional - TikTok / Reels / Shorts - NOT for the Creator Portal</small></h3><p id="snote" style="color:var(--dim);margin:6px 0 10px"></p><button class="btn soc" id="sbtn" onclick="mkSocial()">CREATE SOCIAL VIDEOS</button><div class="files" id="sfiles"></div><a class="btn soc" id="szip" href="/social.zip" hidden>DOWNLOAD SOCIAL FILES (ZIP)</a></div></div>
 <script>
 const $=id=>document.getElementById(id);let shownSheet=false,lastLive="",won=false;
 const fmt=s=>{s=Math.max(0,Math.round(s));const m=Math.floor(s/60);return m+":"+String(s%60).padStart(2,"0")};
@@ -119,6 +121,7 @@ $("rec").hidden=st!=="running";
 const g=d.gallery||[];$("gal").innerHTML=g.map(a=>`<a href="/img?rel=${encodeURIComponent(a.rel)}" target="_blank" rel="noopener"><img loading="lazy" src="/thumb?rel=${encodeURIComponent(a.rel)}&t=${a.mtime}"><small>${a.name}</small></a>`).join("");
 if(st==="done"&&d.files&&d.files.length){const r=$("result");r.hidden=false;if(!won){r.classList.add("win");won=true}
 if(!shownSheet){$("sheet").src="/pack/lightbox.png?t="+Date.now();shownSheet=true}
+{const sc=$("social");sc.hidden=false;const has=d.social&&d.social.length,sr=(d.social_run||{}).state||"idle";$("szip").hidden=!has;$("sfiles").innerHTML=has?d.social.map(f=>`<a href="/social/${encodeURIComponent(f.name)}" download><b>${f.name}</b><span>${f.mb} MB</span></a>`).join(""):"";const b=$("sbtn");b.disabled=sr==="running";b.textContent=sr==="running"?"WORKING...":has?"MAKE THE SOCIAL VIDEOS AGAIN":"CREATE SOCIAL VIDEOS";$("snote").textContent=sr==="running"?"Making the 9:16 videos (about half a minute)...":sr==="failed"?"The social step failed: "+((d.social_run.log||[]).slice(-1)[0]||"see last_social.log"):has?"Ready. Edit Projects/<map>/social.json to change the texts, then make them again.":"Your kit is ready. Social videos are an extra: vertical 9:16 with English promotional subtitles."}
 $("files").innerHTML=d.files.filter(f=>f.name!=="lightbox.png").map(f=>`<a href="/pack/${encodeURIComponent(f.name)}" download><b>${f.name}</b><span>${f.mb} MB</span></a>`).join("")}
 }catch(e){}}
 async function ver(){try{window._stale=0;try{const k=await (await fetch("/api/kit")).json();if(k.stale){window._stale=1;const u=$("upd");u.style.display="block";u.textContent="Kit updated to v"+k.disk+" (this console runs v"+k.running+"). When the run is finished, close this console and reopen it."}}catch(e){}const v=await (await fetch("/api/version")).json();
@@ -134,6 +137,7 @@ const dl=v.state==="done"?` <a href="/var/${n}.zip">download variant ${n} (zip)<
 return `<div class="vbox"><h4>VARIANT ${n}</h4><small>${run?"working... "+(v.stage||"")+" ("+fmt((Date.now()/1000)-v.started)+")":v.state==="done"?"ready - seed "+v.seed+" - "+fmt(v.seconds||0):v.state==="failed"?"failed: "+(v.error||"see log"):"not generated yet"}</small><br>
 <button onclick="mkVar('${n}')" ${run||busy?"disabled":""}>${v.state==="done"?"REGENERATE "+n+" (new seed)":"GENERATE VARIANT "+n}</button>${dl}${img}</div>`}).join("");
 $("vnote").textContent=d.busy?"A generation is running: wait for it to finish (one at a time).":"Generate a different version of the images to A/B test thumbnails. Version A (the files above) is never touched."}catch(e){}}
+async function mkSocial(){await fetch("/api/social",{method:"POST",headers:{"X-Promo-Token":TOKEN}});tick()}
 async function mkVar(n){await fetch("/api/variant?name="+n,{method:"POST",headers:{"X-Promo-Token":TOKEN}});varTick()}
 varTick();setInterval(varTick,2500);
 
@@ -299,7 +303,7 @@ def make_handler(proj):
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
-            names = {"pack": "promo_pack.zip", "B": "variant_B.zip", "C": "variant_C.zip"}
+            names = {"social": "social_files.zip", "pack": "promo_pack.zip", "B": "variant_B.zip", "C": "variant_C.zip"}
             if extra in names:          # fixed header text only: nothing from the request ever reaches a header
                 self.send_header("Content-Disposition", 'attachment; filename="%s"' % names[extra])
             self.end_headers()
@@ -368,6 +372,19 @@ def make_handler(proj):
                     for f in sorted(pack.iterdir()):
                         if f.is_file() and f.suffix.lower() in (".png", ".mp4", ".md", ".txt"):
                             d["files"].append({"name": f.name, "mb": "%.2f" % (f.stat().st_size / 1048576.0)})
+                sp_ = procs.get("social")
+                sl_ = []
+                try:
+                    sl_ = (proj / "final" / "social_run.log").read_text(encoding="utf-8", errors="replace").splitlines()[-6:]
+                except OSError:
+                    pass
+                d["social_run"] = {"state": "idle" if sp_ is None else "running" if sp_.poll() is None else "done" if sp_.returncode == 0 else "failed", "log": sl_}
+                d["social"] = []
+                sdir = pack / "social"
+                if sdir.is_dir():
+                    for f in sorted(sdir.iterdir()):
+                        if f.is_file() and ".part" not in f.name and f.suffix.lower() in (".mp4", ".srt", ".txt"):
+                            d["social"].append({"name": f.name, "mb": "%.2f" % (f.stat().st_size / 1048576.0)})
                 return self.send(200, json.dumps(d).encode("utf-8"), "application/json")
             if path in ("/img", "/thumb"):
                 f = _safe(proj, (q.get("rel") or [""])[0])
@@ -394,6 +411,20 @@ def make_handler(proj):
                             z.write(f, f.name)
                 return self.send(200, buf.getvalue(), "application/zip",
                                  "pack")
+            if path == "/social.zip":
+                buf = io.BytesIO()
+                sdir = pack / "social"
+                with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as z:
+                    for f in sorted(sdir.iterdir()) if sdir.is_dir() else []:
+                        if f.is_file() and ".part" not in f.name and f.suffix.lower() in (".mp4", ".srt", ".txt"):
+                            z.write(f, f.name)
+                return self.send(200, buf.getvalue(), "application/zip", "social")
+            if path.startswith("/social/"):
+                sdir = pack / "social"
+                f = {p.name: p for p in sdir.iterdir() if p.is_file()}.get(path[8:]) if sdir.is_dir() else None   # lookup in the listing: no path traversal
+                if f is not None:
+                    ct = {"mp4": "video/mp4", "srt": "text/plain", "txt": "text/plain"}.get(f.suffix[1:].lower(), "application/octet-stream")
+                    return self.send(200, f.read_bytes(), ct)
             if path.startswith("/pack/"):
                 f = {p.name: p for p in pack.iterdir() if p.is_file()}.get(path[6:]) if pack.is_dir() else None  # lookup in the listing: no path traversal
                 if f is not None:
@@ -406,8 +437,16 @@ def make_handler(proj):
             u = urlparse(self.path)
             q = parse_qs(u.query)
             host_ok = (self.headers.get("Host") or "").split(":")[0] in ("127.0.0.1", "localhost")
-            if u.path != "/api/variant" or not host_ok or self.headers.get("X-Promo-Token") != token:
+            if u.path not in ("/api/variant", "/api/social") or not host_ok or self.headers.get("X-Promo-Token") != token:
                 return self.send(403, b"forbidden", "text/plain")  # blocks other web pages from triggering a run
+            if u.path == "/api/social":
+                if any(p.poll() is None for p in procs.values()) or read_status(proj).get("state") == "running":
+                    return self.send(409, b"busy", "text/plain")
+                (proj / "final").mkdir(exist_ok=True)
+                logf = open(proj / "final" / "social_run.log", "w", encoding="utf-8")
+                procs["social"] = subprocess.Popen([sys.executable, "-u", str(Path(__file__).resolve().parent / "social_video.py"), "--project", proj.name],
+                                                   stdout=logf, stderr=subprocess.STDOUT, env=dict(os.environ, PROMO_PROJECT=proj.name, PROMO_PROJECTS_DIR=str(proj.parent)))
+                return self.send(202, b"started", "text/plain")
             n = (q.get("name") or [""])[0]
             if n not in ("B", "C"):
                 return self.send(400, b"bad variant", "text/plain")

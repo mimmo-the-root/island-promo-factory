@@ -101,6 +101,7 @@ def main():
     ap.add_argument("--gameplay-look", choices=["cinematic", "hype", "off"], default="cinematic",
                     help="extra EDITED gameplay video (>=4 real moments, grade, zoom, speed, beat-synced cuts, our own music, original audio removed); "
                          "off = only the unedited portal cut. The portal gameplay.mp4 is always one real, unedited cut.")
+    ap.add_argument("--social", action="store_true", help="ALSO make the optional social media content: the polished gameplay montage and the 9:16 videos with English promo subtitles (promo_pack/social/). Default: the kit only")
     ap.add_argument("--gameplay-scenes", type=int, default=3, metavar="N",
                     help="gameplay video (slot 07) = N (2 or 3) real scenes from the best moments, soft dissolves, our music instead of the original audio "
                          "(default 3; 0 = the longer beat-synced montage of >=4 moments; ignored with --gameplay-look off = one unedited cut with its own audio)")
@@ -155,7 +156,7 @@ def main():
         if not _has_rec and not a.skip_video:
             print("--redo-all: no source recording in captures/gameplay: the gameplay video, its music and the screenshots are kept as they are")
         if not a.skip_video and _has_rec:
-            todo += ["captures/gameplay/gameplay.mp4", "captures/gameplay/gameplay.json", "captures/screenshots"]
+            todo += ["captures/gameplay/gameplay.mp4", "captures/gameplay/gameplay_montage.mp4", "captures/gameplay/gameplay.json", "captures/screenshots"]
             todo += ["audio/music.wav", "audio/gameplay_music.wav", "audio/music_mood.txt"] if not any(
                 f.stem.lower() == "music" and f.suffix.lower() != ".wav" for f in (proj / "audio").iterdir() if (proj / "audio").is_dir()) else ["audio/gameplay_music.wav"]
         moved = []
@@ -170,6 +171,10 @@ def main():
                     print("--redo-all: could not move %s (%s), it will be overwritten" % (rel, e))
         print("--redo-all: cleaned %d item(s); the old results are in %s" % (len(moved), arch.relative_to(proj)))
     caps = proj / "captures" / "gameplay"
+    try:
+        licensed = json.loads((proj / "config.json").read_text(encoding="utf-8")).get("music_source") == "licensed"
+    except Exception:
+        licensed = False       # Licensed Music Box (Discover requests): the user's track only, no generated music anywhere
     print("=" * 64)
     import version as V
     print(" ISLAND PROMO FACTORY v%s%s - FULL RUN | map: %s" % (V.read_version(), (" (" + V.git_commit() + ")") if V.git_commit() else "", pp.project_name()))
@@ -194,7 +199,7 @@ def main():
         stages.append(("video cut", None, "gameplay.mp4 is up to date (--redo-video to redo)"))
     else:
         sel = proj / "captures" / "selection.json"
-        if a.gameplay_look == "off":
+        if a.gameplay_look == "off" or licensed or not a.social:       # the kit holds the unedited cut only; the montage is a social extra
             style = []
         elif a.gameplay_scenes > 0:
             style = ["--gameplay-scenes", str(a.gameplay_scenes), "--gameplay-look", a.gameplay_look]
@@ -208,16 +213,19 @@ def main():
 
     audio = proj / "audio"
     has_music = audio.is_dir() and any(f.stem.lower() == "music" for f in audio.iterdir())
+    if licensed and not has_music:
+        print("ERROR: config.json says music_source 'licensed' but audio/music.* is missing: put the Licensed Music Box track there (no music is generated).")
+        sys.exit(2)
     mood_now = None
     try:
         mood_now = json.loads((proj / "config.json").read_text(encoding="utf-8")).get("music_mood")
         side = audio / "music_mood.txt"
-        if has_music and mood_now and side.exists() and side.read_text(encoding="utf-8").strip() != mood_now and any(f.name == "music.wav" for f in audio.iterdir()):
+        if has_music and not licensed and mood_now and side.exists() and side.read_text(encoding="utf-8").strip() != mood_now and any(f.name == "music.wav" for f in audio.iterdir()):
             print("music mood changed (%s -> %s): the generated track is made again" % (side.read_text(encoding="utf-8").strip(), mood_now))
             has_music = False      # only our own generated music.wav is replaced; a user's music.mp3 is never touched
     except Exception:
         pass
-    if a.redo_all and has_music and audio.is_dir() and all(f.name == "music.wav" or f.stem.lower() != "music" for f in audio.iterdir()):
+    if a.redo_all and has_music and not licensed and audio.is_dir() and all(f.name == "music.wav" or f.stem.lower() != "music" for f in audio.iterdir()):
         has_music = False      # --redo-all: only the GENERATED music.wav is made again, never a music file of the user's
     # the music comes BEFORE the video cut: the gameplay scenes reuse the same track (one sound for gameplay and trailer)
     if has_music:
@@ -229,11 +237,13 @@ def main():
     stages.append(("trailer", [py, str(SCRIPTS / "trailer_builder.py")], None))
     stages.append(("promo pack", [py, str(SCRIPTS / "promo_pack.py")], None))
     stages.append(("lightbox", [py, str(SCRIPTS / "lightbox.py")], None))
-    stages.append(("social", None if a.skip_video else [py, str(SCRIPTS / "social_video.py")], "--skip-video" if a.skip_video else None))   # last: an extra, never blocks the pack
+    stages.append(("similarity", [py, str(SCRIPTS / "similarity.py")], None))      # local pre-check against your other maps: warns, never blocks
+    _soc = [py, str(SCRIPTS / "social_video.py")] if (a.social and not a.skip_video) else None   # optional extra, last: never blocks the kit
+    stages.append(("social", _soc, None if _soc else ("--skip-video" if a.skip_video else "optional: add --social, use the console button, or ask the bot")))
 
     # expected duration per stage: last successful run of the same kind, else a rough default
     defaults = {"images": 30 if (a.no_qwen or a.conform) else 300, "video analyse": 25, "video cut": 30, "music": 4,
-                "trailer": 50, "promo pack": 10, "lightbox": 4, "social": 25}
+                "trailer": 50, "promo pack": 10, "lightbox": 4, "similarity": 5, "social": 25}
     if music_stage[1] is not None:
         try:
             import music_ai
@@ -317,6 +327,21 @@ def main():
                                                                  "stages": timings}, indent=2), encoding="utf-8")
     status.update(state="failed" if failed else "done", total=round(total, 1), failed=failed)
     save()
+    try:        # structured result for agents and scripts: they read this one small file instead of the logs
+        pack_ = proj / "promo_pack"
+        files_ = [{"name": f.relative_to(pack_).as_posix(), "mb": round(f.stat().st_size / 1048576.0, 2)} for f in sorted(pack_.rglob("*")) if f.is_file()] if pack_.is_dir() else []
+        sim_ = {}
+        try:
+            sim_ = json.loads((proj / "final" / "similarity.json").read_text(encoding="utf-8")).get("findings", [])
+        except Exception:
+            pass
+        (proj / "final" / "latest-result.json").write_text(json.dumps({
+            "map": pp.project_name(), "version": V.read_version(), "state": "failed" if failed else "done", "failed_stage": failed,
+            "total_seconds": round(total, 1), "stages": timings, "files": files_, "similarity": sim_,
+            "portal_files": [f["name"] for f in files_ if not f["name"].startswith("social/") and f["name"][:2].isdigit()],
+            "social_files": [f["name"] for f in files_ if f["name"].startswith("social/")]}, indent=2), encoding="utf-8")
+    except Exception as e:
+        print("(latest-result.json not written: %s)" % e)
     if failed:
         print("\nFULL RUN FAILED at stage '%s' - see last_run_all.log (and last_run.log for the images stage)" % failed)
         sys.exit(1)
