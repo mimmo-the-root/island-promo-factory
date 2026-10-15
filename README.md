@@ -1,135 +1,98 @@
 # Island Promo Factory
 
-**Everything the Fortnite Creator Portal asks for your UEFN island — thumbnails, logo, gameplay video, trailer, screenshots — built on your own PC, one map at a time.**
+**Your whole Fortnite island promo kit in one run: thumbnails, logo, lobby image, gameplay video, trailer and screenshots, already in Epic's sizes and checked against Epic's current rules.**
 
-You give it an environment screenshot, a character render and a gameplay recording. It gives you the files the portal asks for,
-already at the right size, inside the safe areas, validated and named like the portal fields.
+Free, open source (MIT), and it runs on your own PC. You never upload your art anywhere.
 
-![Demo thumbnails made by the kit](docs/img/demo-thumbnails.jpg)
-<sup>Example map "STORM CASTLE", built in UEFN. Fortnite and Unreal Editor for Fortnite are trademarks of Epic Games, Inc.; Island Promo Factory is an unofficial tool.</sup>
+[**Read the manual**](https://mimmo-the-root.github.io/island-promo-factory/) · [See the demo results](https://mimmo-the-root.github.io/island-promo-factory/demo/) · [Latest release](https://github.com/mimmo-the-root/island-promo-factory/releases/latest) · [What's new](https://mimmo-the-root.github.io/island-promo-factory/whatsnew.html)
 
-| Output | Spec |
+![One run, the whole kit: the Kit Lightbox of the demo map "STORM CASTLE"](docs/demo/lightbox.jpg)
+<sup>Everything above came out of one run on a demo map built in UEFN. Fortnite and Unreal Editor for Fortnite are trademarks of Epic Games, Inc.; Island Promo Factory is an unofficial tool.</sup>
+
+## Why creators use it
+
+- **Hours of editing become one run.** Give it a screenshot of your island, a character render and a gameplay recording. Come back to numbered files named like the Creator Portal fields.
+- **Epic's rules are built in.** Sizes, safe areas, file limits, video length and colour tagging come from Epic's own pages (checked 15 Oct 2026, mandatory from 22 Oct 2026). Every file is validated and the run tells you exactly what to fix.
+- **Real gameplay stays real.** The portal gameplay video is one continuous, unedited cut of your recording, with its original audio. The trailer uses your real clips, your island code and the rating badge.
+- **Crisp text, always.** The AI draws the art only; titles and logo are rendered with a real font, so nothing is misspelled or smeared.
+- **Faster the second time.** Every stage is cached: change a title or a clip and only what depends on it runs again.
+- **A live console.** A page on your PC shows progress, the results as they appear, A/B variants of the artwork and every download in one click.
+- **Social videos, if you want them.** An optional extra makes vertical 9:16 videos with English subtitles for TikTok, Reels and Shorts, kept apart from the portal files so you never upload the wrong one.
+
+## What you get
+
+| File | Spec |
 |---|---|
-| Landscape thumbnail (with title / art only) | 1920x1080 PNG, < 5 MB |
-| Portrait thumbnail (with title / art only) | 1440x1920 PNG, < 5 MB |
-| Island logo | 1440x608 transparent PNG |
-| Lobby background | 2048x1024 PNG |
-| Gameplay video | 1920x1080 MP4 (+ ProRes MOV), 10-40 s, cinematic scenes of your own recording with AI-generated music |
-| Trailer | 1920x1080 MP4, 10-40 s, your real clips, end card, age-rating (ESRB) + "Developed in Fortnite" badges |
-| Screenshots (3) | 1920x1080 PNG, graded like the videos |
+| Landscape thumbnail (with title / art only) | 1920x1080, under 5 MB |
+| Portrait thumbnail (with title / art only) | 1440x1920, under 5 MB |
+| Island logo | 1440x608, transparent PNG |
+| Lobby background | 2048x1024 |
+| Gameplay video | 1920x1080, 15-30 s, one unedited cut of your recording (MP4 + ProRes MOV) |
+| Trailer | 1920x1080, 15-30 s, your clips, end card, age-rating and "Developed in Fortnite" badges |
+| Screenshots (3) | 1920x1080 |
+| Kit Lightbox + upload checklist | one board with every file, and a checklist for the portal |
+| Social videos (optional) | 1080x1920, 15-30 s, English subtitles and captions |
 
 > Specs reflect the Creator Portal in October 2026. Epic changes them: always check the portal. Details: [docs/SPECS.md](docs/SPECS.md).
 
-## Choose your setup
+![The result card of the console: lightbox and downloads](docs/manual/images/console-result.png)
 
-**ComfyUI and the AI models are NOT included** in this repository and are the only big download (about 45 GB: artwork 30 GB + music 15 GB, `download_models.bat` fetches them for you). They are used for two things:
-the AI-generated horizontal artwork (Qwen Image Edit) and the AI music of trailer and gameplay (ACE-Step 1.5). Everything else (title, logo, vertical art,
-thumbnails, gameplay, trailer, screenshots, promo pack) runs without them, and without ComfyUI the music falls back to a built-in synthesiser.
-
-| Setup | You need | You get | You miss |
-|---|---|---|---|
-| **Full** | Windows, NVIDIA GPU with about 12 GB VRAM, ~55 GB disk, ComfyUI + the models (`download_models.bat`) | everything, including AI horizontal art, AI music and A/B variants | nothing |
-| **Light** | Windows, any PC, Python, ffmpeg | everything below the AI art; the vertical art is built without AI, you supply the horizontal art, the music comes from the built-in synthesiser | AI horizontal art, AI music |
-| **Remote ComfyUI** | Light + a ComfyUI running on another PC or in the cloud (`COMFY_URL`) | the Full result on a weak PC | nothing |
-
-Step-by-step install for all three: **[docs/INSTALL.md](docs/INSTALL.md)**. Run `doctor.bat` (or `doctor.bat --profile light`) at any time: it tells you what is ready and the exact fix for what is not.
-
-## Two ways to use it
-
-**With Claude Code (recommended).** Open the `island-promo-factory` folder in Claude Code and type `/promo-pack`. Claude asks for the island code, title and your files,
-starts ComfyUI and the live console for you, runs every step, checks the results and writes a report. You never have to double-click a `.bat` file.
-See [Using it with Claude Code](#using-it-with-claude-code).
-
-**Without Claude.** Everything also runs from plain commands:
+## Try it in minutes
 
 ```bat
-doctor.bat                                   :: what is ready, what is missing
-demo.bat                                     :: a complete demo kit in about two minutes, no GPU needed
+doctor.bat        :: tells you what is ready and the exact fix for what is not
+demo.bat          :: a complete demo kit, no GPU needed (about 15 minutes, once)
+```
+
+Then your own island:
+
+```bat
 new_map.bat my-map "MY MAP TITLE" --style SCI_FI
 :: put your files in Projects\my-map\
-::   background\background.png     the environment, no characters, >= 1920 px wide
-::   characters\character_01.png   ONE character, transparent PNG with margin on all sides
-::                                 (none? choose: your own, --random from Resources\Characters, or --none: scripts\default_skin.py)
-::   captures\gameplay\recording.mp4   a 5+ minute recording of your island (optional but recommended)
-:: edit Projects\my-map\config.json  (island_code, title, style, character identity)
-run_all.bat my-map --review-prompt           :: add --no-qwen if you have no ComfyUI
-dashboard.bat my-map                         :: reopen the live results page (runs in the background)
+::   background\background.png        the environment, no characters, at least 1920 px wide
+::   characters\character_01.png      ONE character, transparent PNG with margin on all sides
+::   captures\gameplay\recording.mp4  a 5+ minute recording of your island (recommended)
+:: edit Projects\my-map\config.json   (island code, title, style)
+run_all.bat my-map                    :: add --social for the vertical videos, --no-qwen without ComfyUI
+dashboard.bat my-map                  :: reopen the live console
 ```
 
-Results: `Projects\my-map\promo_pack\` (portal-ready, numbered like the portal fields) and `Projects\my-map\final\`.
+Results are in `Projects\my-map\promo_pack\`. Full walkthrough: **[the manual](https://mimmo-the-root.github.io/island-promo-factory/)**.
 
-## The live console
+## Works with Claude Code
 
-A web page on your own PC (never exposed to the network) follows the run: progress, time left, what is being produced right now, the results as they appear, the log,
-and buttons to generate **variants B and C** of the artwork with a different seed for A/B tests.
+Open the folder in Claude Code and type `/promo-pack`. Claude asks for the island code, title and files, starts everything, runs every step, checks the results and writes a report. After the kit it offers the optional social videos. You never have to double-click a `.bat` file. At every session start the kit syncs its skills and tells you when a newer release exists (`/promo-update`).
 
-![The live console](docs/img/console.png)
+## Choose your setup
 
-When the run is done, the promo pack and its numbered preview board (the "Kit Lightbox") are one click away:
+| Setup | You need | You get |
+|---|---|---|
+| **Full** | Windows, NVIDIA GPU with about 12 GB VRAM, ~55 GB disk, ComfyUI + models (`download_models.bat`) | everything, including AI horizontal art, AI music and A/B variants |
+| **Light** | Windows, any PC, Python, ffmpeg | everything except AI art and AI music: you supply the horizontal art, the music comes from the built-in synthesiser |
+| **Remote ComfyUI** | Light + a ComfyUI on another PC or in the cloud (`COMFY_URL`) | the Full result on a weak PC |
 
-![Kit Lightbox of the demo map](docs/img/lightbox.jpg)
-
-## How it works
-
-```
- environment.png + character.png + recording.mp4
-        |
-        v
-  [Qwen Image Edit via ComfyUI]  -> horizontal art (one character, no text)   (Full / Remote)
-  [deterministic composite]      -> vertical half-body art (no AI, full control)
-        |
-        v
-  title + logo (your font)  ->  thumbnails  ->  validator  ->  promo_pack/
-        |
-        v
-  gameplay montage + trailer + screenshots (ffmpeg, one cinematic look, generated music)
-```
-
-- **AI makes art only.** Titles and logos are rendered with a real font, so text is always crisp and correct. A quality gate rejects invented text, extra objects and creatures.
-- **Every stage is checked.** A stage must exit 0 *and* create its file, otherwise the run stops with a clear message.
-- **Nothing is deleted.** Old results move to `_previous` or `_to_delete_*` folders.
-- **One map at a time.** Review, upload, learn, then the next map.
-- **Gameplay scenes:** the gameplay video is 2-3 real scenes from your best moments with generated music instead of the original audio (`--gameplay-scenes 2|3`, default 3).
-- **Look:** `--gameplay-look cinematic|hype|off` applies one look to the gameplay video, the trailer clips and the screenshots. `off` keeps your footage unedited.
-- **Music:** with ComfyUI the kit generates an original instrumental track with ACE-Step 1.5 (mood and style come from your map; 3 candidates are made, the best by automatic scoring is kept, the others stay in `audio/_candidates/`, switch with `music_ai.py use <file>`). Without ComfyUI or the models it falls back to a built-in synthesiser. The same track is used for the gameplay video and the trailer. Your own `audio/music.mp3` always wins. Qwen and ACE-Step never run together: the GPU memory is freed between them.
-- **Dark maps are lifted automatically:** thumbnails, lobby background, gameplay scenes, trailer clips and screenshots get a gentle exposure lift when they are too dark (`"exposure": "off"` disables it).
-- **Rebuild everything:** `/promo-redo <map>` (or `run_all <map> --redo-all`) moves the old results aside and runs the pipeline again.
+ComfyUI and the models (about 45 GB) are not included; `download_models.bat` fetches them. Step by step: [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Your brand, your files (not included)
 
-- **Font:** drop a `.otf`/`.ttf` in `Resources/brand/font/`. Without one, an open-licensed fallback font is used. Fortnite's Burbank is *not* distributed here.
-- **Badges:** all in `Resources/badges/` and nowhere else: `esrb_teen.png` (or `rating.png`; the map's ESRB rating, per map in `Projects/<map>/badges/`) and `FNDV_V_White_EN.png` + `FNDV_V_Black_EN.png` (or one `developed_in_fortnite.png`) (video only, never distorted). Get the official files from their owners.
-- **Music:** optional `Projects/<map>/audio/music.mp3`. Use only music you are licensed to use.
-- **Gameplay and screenshots** come from *your* recording. The default look edits them (grade, speed, transitions); the portal may ask for real, unedited gameplay: use `--gameplay-look off` for an unedited cut and check Epic's current rules before uploading.
+- **Font:** drop a `.otf`/`.ttf` in `Resources/brand/font/`. Without one an open-licensed fallback is used. Fortnite's Burbank is not distributed here.
+- **Badges:** put the official rating badge and "Developed in Fortnite" files in `Resources/badges/`. Get them from their owners.
+- **Music:** optional `Projects/<map>/audio/music.mp3` (use only music you are licensed to use); otherwise the kit generates an original track.
+- **Gameplay and screenshots** come from *your* recording.
 
-## Using it with Claude Code
+## Good to know
 
-`CLAUDE.md` and the skills in `.claude/skills/` describe the commands, folders and rules, so Claude can run the whole loop:
-`island-intake` (step 0: island code, title, assets, READY check), `island-images`, `island-video`, `island-review`, orchestrated by `island-promo`.
-Commands: `/promo-pack` (create or continue the promo package of an island), `/promo-conform` (start from a thumbnail you already have), `/promo-redo` (clean and rebuild a whole map), `/promo-console` (open the live console), `/promo-redo` (clean and rebuild a whole map), `/promo-update` (install the newest release).
-At every session start the kit syncs its skills and tells you when a newer release exists. Details: [docs/USAGE.md](docs/USAGE.md), [docs/UPDATING.md](docs/UPDATING.md).
-
-## Tuning
-
-Environment variables (see [docs/USAGE.md](docs/USAGE.md)): `PROMO_PROJECT`, `PROMO_SEED`, `PROMO_DEBUG=1`, `PROMO_PROFILE=light`, `COMFY_URL`,
-`PROMO_TITLE_CX`, `PROMO_VTITLE_W`, `PROMO_VTITLE_CY`, `PROMO_BUST_CROP`, `PROMO_BUST_H`, `PROMO_BUST_TOP`, `PROMO_CHAR_X`, `PROMO_TRAILER_SECONDS`, `PROMO_BADGE_MODE`.
-
-## Tests
-
-`python tests/smoke_test.py` builds a synthetic map end-to-end with a mock ComfyUI server: no GPU, no game assets.
-
-## Limits you should know
-
+- Nothing is uploaded and nothing is deleted: old results move to `_previous` folders. You upload the files yourself and you are responsible for following Epic's rules.
 - Qwen does not obey numeric positions, so the vertical art is composed by script, not by the model.
-- A clipped character render shows hard edges (they are feathered, but give it margin).
-- The gameplay montage and the trailer are edited footage of your own recording; they are not AI video.
-- Unofficial tool, not affiliated with Epic Games. See [DISCLAIMER.md](DISCLAIMER.md) and [NOTICE.md](NOTICE.md). Security: [SECURITY.md](.github/SECURITY.md).
+- The trailer is edited footage of your own recording; it is not AI video.
+- Unofficial tool, not affiliated with, endorsed or sponsored by Epic Games. See [DISCLAIMER.md](DISCLAIMER.md), [NOTICE.md](NOTICE.md) and [SECURITY.md](.github/SECURITY.md).
 
-## Versions and updates
+## Documentation
 
-The console shows the installed version and tells you when a newer release exists; `update.bat` (or `/promo-update` in Claude Code) installs it without touching your maps or brand files.
-See [docs/UPDATING.md](docs/UPDATING.md) and [CHANGELOG.md](CHANGELOG.md).
+[Manual](https://mimmo-the-root.github.io/island-promo-factory/) · [Install](docs/INSTALL.md) · [Usage and settings](docs/USAGE.md) · [Updating](docs/UPDATING.md) · [Specs](docs/SPECS.md) · [Changelog](CHANGELOG.md)
 
-## License
+`python tests/smoke_test.py` builds a synthetic map end to end with a mock ComfyUI server: no GPU, no game assets.
 
-MIT for the code (see [LICENSE](LICENSE)). Models, fonts, badges and game content have their own licences.
+## Made by
+
+[@mimmo_the_root](https://x.com/mimmo_the_root) on X. MIT for the code (see [LICENSE](LICENSE)); models, fonts, badges and game content have their own licences.
