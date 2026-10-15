@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.1.20 — Cheap agents, token rules, console and start-up messages
+
+- Seven agents in `.claude/agents/` (synced with the kit): promo-intake, promo-runner, epic-compliance, social-copywriter, release-manager on Haiku; art-director and kit-auditor on Sonnet. None uses Opus.
+- Cost rules in `CLAUDE.md`: short replies, no polling, no full reads of CHANGELOG/logs/big images, mechanical work to the cheap agents.
+- `contact_sheet.py`: all pictures of a pack in ONE small image for review. `agent_cost.py` + console page `/costs`: tokens per model and per role (main vs sub-agent), no prices.
+- Console: amber bar "Kit updated to vX (this console runs vY)" when the files on disk are newer than the running console.
+- Start-up message every session ("v1.1.20 - up to date" or "updated from vA to vB", also after `git pull`); `.post-update`, `.last_seen_version` and the sync lock are git-ignored.
+- `doctor.py --fix` re-syncs skills, agents, commands and hooks and creates missing folders. New quick test `tests/test_harness.py` (runs in CI before the long smoke test).
+
 ## v1.1.19 — Epic October 2026 rules + stability + update
 
 - Epic rules centralised in `scripts/epic_specs.json` (verified 2026-10-15, mandatory from 22 Oct 2026): thumbnails landscape + portrait (art+logo and art only), logo 1440x608, video 15–30 s MOV ProRes. Validator, promo pack and docs read from it.

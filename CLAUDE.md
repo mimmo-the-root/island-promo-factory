@@ -31,3 +31,10 @@ Use the skills in `.claude/skills/` (source: `scripts/claude_kit/`, synced by `s
 - Single source: `VERSION` (X.Y.Z). Every user-visible change: add a line to the top `CHANGELOG.md` entry (or `python scripts/release.py bump ...` for a new version).
 - Commit `vX.Y.Z: summary`, tag `vX.Y.Z`; CI builds the Release. Run `python scripts/release.py check` and `python tests/test_version.py` before committing.
 - `update.py` replaces only scripts/, workflows/, docs/, tests/, Resources/prompts+fonts, root docs/.bat files. If you add a new top-level folder that ships to users, add it to `MANAGED_DIRS` in `scripts/update.py`.
+
+## Cost rules (tokens)
+- Replies are short: result first, no preamble, no closing offers. Ask at most one question.
+- Mechanical work goes to the cheap agents in `.claude/agents/` (Haiku: intake, runner, compliance, copy drafts, release chores); judgment that needs eyes goes to Sonnet (`art-director`). No agent uses Opus.
+- Size first, then spawn: a step a script does alone is not an agent task. Never poll a run: read `final/run_status.json` and the log tail, rarely.
+- Do not re-run a check on unchanged inputs. Never read `CHANGELOG.md` in full, whole logs, or full-size images / Epic skin renders: use `python scripts/contact_sheet.py --project <slug>` and look at that one image.
+- Summarise tool output instead of pasting it. `python scripts/agent_cost.py` shows where tokens went (console: /costs).

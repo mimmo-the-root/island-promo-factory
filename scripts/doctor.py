@@ -1,7 +1,7 @@
 import sys as _sys; from pathlib import Path as _P; _sys.path.insert(0, str(_P(__file__).resolve().parent))  # embedded python ignores script dir
 """First-run check: what works, what is missing and exactly what to do about it.
 
-Usage: doctor.py [--quiet] [--profile full|light]   (light, or PROMO_PROFILE=light: no ComfyUI / models expected, no AI art)
+Usage: doctor.py [--quiet] [--fix] [--profile full|light]   (--fix: re-sync skills, agents, commands and the start-up/exit hooks, create missing folders)   (light, or PROMO_PROFILE=light: no ComfyUI / models expected, no AI art)
 OK   = ready.   WARN = a feature is off (the kit still runs without it).   FAIL = nothing will run until you fix it.
 Exit code 0 unless something FAILed.
 """
@@ -41,7 +41,21 @@ def get(url, timeout=4):
         return json.loads(r.read().decode("utf-8"))
 
 
+def fix_kit():
+    """--fix: everything the kit can repair by itself, nothing else (no downloads, no user files touched)."""
+    for d in ("Projects", "Resources/brand", "Resources/badges", "Resources/audio", "Resources/Characters"):
+        (pp.ROOT / d).mkdir(parents=True, exist_ok=True)
+    try:
+        import claude_sync
+        ch = claude_sync.sync(pp.ROOT, quiet=True)
+        report("OK", "kit fix: %s" % ("%d change(s) in .claude/ (open a NEW Claude session)" % len(ch) if ch else "skills, agents, commands and hooks already in place"))
+    except Exception as e:
+        report("WARN", "kit fix failed (%s)" % e, "run: python scripts\\claude_sync.py")
+
+
 def main():
+    if "--fix" in sys.argv:
+        fix_kit()
     print("Island Promo Factory - doctor (%s)\n" % (pp.ROOT / "VERSION").read_text().strip() if (pp.ROOT / "VERSION").exists() else "Island Promo Factory - doctor\n")
 
     # --- required ---

@@ -28,6 +28,7 @@ import promo_project as pp
 import version as V
 
 ROOT = Path(__file__).resolve().parent.parent
+START_VERSION = V.read_version()      # the version this process was started with (files on disk may be newer after an update)
 IMG_EXT = (".png", ".jpg", ".jpeg")
 FRAME_RE = re.compile(r"frame (\d+)/(\d+)")
 SCRIPT_RE = re.compile(r"RUNNING: (\S+\.py)")
@@ -120,9 +121,9 @@ if(st==="done"&&d.files&&d.files.length){const r=$("result");r.hidden=false;if(!
 if(!shownSheet){$("sheet").src="/pack/lightbox.png?t="+Date.now();shownSheet=true}
 $("files").innerHTML=d.files.filter(f=>f.name!=="lightbox.png").map(f=>`<a href="/pack/${encodeURIComponent(f.name)}" download><b>${f.name}</b><span>${f.mb} MB</span></a>`).join("")}
 }catch(e){}}
-async function ver(){try{const v=await (await fetch("/api/version")).json();
+async function ver(){try{window._stale=0;try{const k=await (await fetch("/api/kit")).json();if(k.stale){window._stale=1;const u=$("upd");u.style.display="block";u.textContent="Kit updated to v"+k.disk+" (this console runs v"+k.running+"). When the run is finished, close this console and reopen it."}}catch(e){}const v=await (await fetch("/api/version")).json();
 $("ver").textContent="v"+v.version;
-const u=$("upd");if(v.newer){u.style.display="block";u.textContent="Update available: v"+v.latest+" (you have v"+v.version+"). When this run is finished, close the window and run update.bat."}else{u.style.display="none"}}catch(e){}}
+const u=$("upd");if(window._stale){}else if(v.newer){u.style.display="block";u.textContent="Update available: v"+v.latest+" (you have v"+v.version+"). When this run is finished, close the window and run update.bat."}else{u.style.display="none"}}catch(e){}}
 tick();setInterval(tick,1000);ver();setInterval(ver,600000);
 const TOKEN="__TOKEN__";
 async function varTick(){try{const d=await (await fetch("/api/variants")).json();
@@ -335,6 +336,18 @@ def make_handler(proj):
                         f = listing.get(parts[1])          # only names that really exist in the folder; request text never reaches a path
                         if f and f.suffix.lower() in IMG_EXT:
                             return self.send(200, f.read_bytes(), "image/png")
+            if path == "/api/kit":
+                disk = V.read_version()
+                return self.send(200, json.dumps({"running": START_VERSION, "disk": disk, "stale": disk != START_VERSION}).encode("utf-8"), "application/json")
+            if path == "/api/costs":
+                import agent_cost
+                return self.send(200, json.dumps(agent_cost.scan(ROOT)).encode("utf-8"), "application/json")
+            if path == "/costs":
+                import agent_cost
+                txt = agent_cost.render(agent_cost.scan(ROOT))
+                page = ("<!doctype html><meta charset=utf-8><title>Costs</title><body style='background:#0b0d14;color:#e8ecf5;font:14px ui-monospace,Consolas,monospace;padding:24px'>"
+                        "<a href=/ style='color:#22e1ff'>&larr; console</a><pre>%s</pre>" % txt.replace("&", "&amp;").replace("<", "&lt;"))
+                return self.send(200, page.encode("utf-8"), "text/html; charset=utf-8")
             if path == "/api/version":
                 return self.send(200, json.dumps(V.info(check=False)).encode("utf-8"), "application/json")
             if path == "/api/status":

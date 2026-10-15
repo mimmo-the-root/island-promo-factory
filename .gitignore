@@ -45,3 +45,7 @@ ComfyUI_windows_portable_*.7z
 Resources/brand/uefn/          # legacy folders of older kits: the badges now live only in Resources/badges/
 Resources/brand/pegi/
 _releases/
+
+.last_seen_version
+.post-update
+.kit-sync.lock

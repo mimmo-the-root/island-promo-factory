@@ -20,6 +20,7 @@ jobs:
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then python scripts/release.py check --tag "$GITHUB_REF_NAME"; else python scripts/release.py check; fi
       - run: python tests/test_version.py
+      - run: python tests/test_harness.py
       - run: python tests/smoke_test.py
   release:
     # A tag push only becomes a GitHub Release when the tests job passed.

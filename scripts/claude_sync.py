@@ -28,7 +28,7 @@ def sync(root, quiet=False):
     stamp = time.strftime("%Y%m%d_%H%M%S")
     backup = root / "_update_backup" / ("claude_" + stamp)
     changes = []
-    for sub in ("skills", "commands"):
+    for sub in ("skills", "commands", "agents"):
         for f in sorted((kit / sub).rglob("*")) if (kit / sub).is_dir() else []:
             if not f.is_file():
                 continue

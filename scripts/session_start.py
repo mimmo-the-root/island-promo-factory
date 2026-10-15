@@ -25,11 +25,24 @@ try:
             mk.unlink()
         except Exception:
             pass
+    seen = V.ROOT / ".last_seen_version"
+    try:
+        prev = seen.read_text(encoding="utf-8").strip()
+    except OSError:
+        prev = ""
+    if prev and prev != cur and not any("updated from" in m for m in msgs):
+        msgs.append("Island Promo Factory updated from v%s to v%s." % (prev, cur))     # git pull / manual copy: no update.bat marker
+    try:
+        seen.write_text(cur, encoding="utf-8")
+    except OSError:
+        pass
     latest = V.latest_release()
     tag = (latest or {}).get("tag", "")
     if tag and V.is_newer(tag, cur):
         msgs.append("Island Promo Factory %s is available (you have v%s). Type /promo-update to install it." % (tag, cur))
         ctx.append("A newer Island Promo Factory release (%s) exists; the installed version is v%s. Offer the user to run /promo-update before starting a map." % (tag, cur))
+    if not any("available" in m for m in msgs):
+        msgs.append("Island Promo Factory v%s - up to date." % cur)
     ctx.append("Island Promo Factory v%s. For a new or existing map follow the island-promo skill (step 0 = island-intake). "
                "You run every command yourself: the user must never have to double-click .bat files." % cur)
     out = {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": " ".join(ctx)}}
