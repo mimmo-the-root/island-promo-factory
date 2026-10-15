@@ -62,7 +62,7 @@ main{position:relative;max-width:1240px;margin:0 auto;padding:22px 18px 70px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
 .card h3{margin:0 0 10px;font-size:11px;letter-spacing:.2em;color:var(--dim)}
 .live{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000;display:grid;place-items:center}
-.live img{width:100%;height:100%;object-fit:contain;animation:fade .5s}.live .tag{position:absolute;left:10px;top:10px;padding:4px 9px;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;letter-spacing:.1em}
+.live img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;animation:fade .5s}.live .tag{position:absolute;left:10px;top:10px;padding:4px 9px;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;letter-spacing:.1em}
 .live .rec{position:absolute;right:12px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--bad);animation:pulse 1s infinite}
 @keyframes fade{from{opacity:.3}to{opacity:1}}
 .nodes{display:grid;gap:8px}.node{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px}

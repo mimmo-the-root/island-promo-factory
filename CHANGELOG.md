@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.27 — Console preview shows tall images whole
+
+- Console: the "Now producing" preview showed a tall image (the 1440x1920 portrait thumbnail) cropped at the bottom; it now fits whole inside its frame.
+
 ## v1.1.26 — README as a product page
 
 - README rewritten for people who have not seen the kit yet: benefits first, what you get, quick start, setups, and links to the manual, the demo results and what's new. Specs corrected (video 15-30 s, gameplay is one unedited cut).

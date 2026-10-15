@@ -173,5 +173,7 @@ check("def recording(" in _md and "demo_recording.mp4" in _md, "demo: makes a sc
 check((ROOT / ".github" / "workflows" / "pages.yml").exists() and "build_manual.py" in (ROOT / "publish.ps1").read_text(encoding="utf-8"), "pages workflow exists and publish.ps1 rebuilds the manual")
 
 check("window._map" in _db and "location.reload()" in _db, "console: a page that finds another map behind its address reloads instead of mixing the two")
+check(".live img{position:absolute;inset:0" in _db, "console: the live preview fits tall images whole (no crop)")
+
 print("\n%d check(s) failed" % len(fails))
 sys.exit(1 if fails else 0)
