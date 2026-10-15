@@ -127,5 +127,38 @@ check('"--social"' in ra_src and "optional: add --social" in ra_src and "not a.s
 check("/api/social" in dash and "mkSocial" in dash and "CREATE SOCIAL VIDEOS" in dash, "console: button to create the social videos")
 check("Optional social step" in (ROOT / "scripts" / "claude_kit" / "skills" / "island-review" / "SKILL.md").read_text(encoding="utf-8"), "island-review: asks about the social videos AFTER the kit")
 
+# --- v1.1.23: per-stage cache
+import stage_cache as sc  # noqa: E402
+with tempfile.TemporaryDirectory() as d:
+    d = Path(d)
+    for sub in ("input", "final", "promo_pack", "characters", "title", "background"):
+        (d / sub).mkdir()
+    (d / "config.json").write_text("{}", encoding="utf-8")
+    (d / "input" / "a.png").write_bytes(b"one")
+    for o in sc.STAGES["images"]["out"]:
+        (d / o).write_bytes(b"x")
+    k1 = sc.stage_key(d, "images", "q=1")
+    check(not sc.hit(d, "images", k1), "stage cache: nothing stored yet is a miss")
+    sc.store(d, "images", k1)
+    check(sc.hit(d, "images", sc.stage_key(d, "images", "q=1")), "stage cache: same inputs and outputs present is a hit")
+    check(not sc.hit(d, "images", sc.stage_key(d, "images", "q=0")), "stage cache: a changed flag is a miss")
+    (d / "input" / "a.png").write_bytes(b"two")
+    check(not sc.hit(d, "images", sc.stage_key(d, "images", "q=1")), "stage cache: a changed input file is a miss")
+    (d / "input" / "a.png").write_bytes(b"one")
+    check(sc.hit(d, "images", sc.stage_key(d, "images", "q=1")), "stage cache: restoring the input is a hit again")
+    (d / sc.STAGES["images"]["out"][0]).unlink()
+    check(not sc.hit(d, "images", sc.stage_key(d, "images", "q=1")), "stage cache: a missing output is a miss")
+    (d / "promo_pack" / "01.png").write_bytes(b"p")
+    (d / "promo_pack" / "lightbox.png").write_bytes(b"l1")
+    kl = sc.stage_key(d, "lightbox")
+    (d / "promo_pack" / "lightbox.png").write_bytes(b"l2")
+    check(sc.stage_key(d, "lightbox") == kl, "stage cache: the lightbox's own output is not one of its inputs")
+    big = d / "big.bin"
+    with open(big, "wb") as f:
+        f.truncate(sc.BIG + 1024)
+    check(len(sc.file_digest(big)) == 64, "stage cache: files over 64 MB are sampled, not read whole")
+ra2 = (ROOT / "scripts" / "run_all.py").read_text(encoding="utf-8")
+check("--no-cache" in ra2 and "sc.hit(" in ra2 and "sc.store(" in ra2, "run_all uses the stage cache (--no-cache forces)")
+
 print("\n%d check(s) failed" % len(fails))
 sys.exit(1 if fails else 0)

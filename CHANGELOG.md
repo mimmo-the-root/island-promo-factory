@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.23 — Faster reruns: a stage is redone only when something upstream changed
+
+- Per-stage cache (`scripts/stage_cache.py`, stored in `Projects/<map>/final/stage_cache.json`): images, trailer, promo pack and lightbox are skipped when the SHA-256 of their inputs (files, kit version, relevant flags) is unchanged and their outputs are still there. Change a title, a character, a clip or the music and only the stages downstream of it run again.
+- `run_all --no-cache` redoes everything; `--redo-all`, `--redo-portrait` and `--redo-video` keep forcing what they always forced. `python scripts/stage_cache.py --project <map>` shows what is stored (`--clear` forgets it). The console shows a cached stage as skipped ("unchanged since the last run").
+
 ## v1.1.22 — Real gameplay for the portal, similarity pre-check, clearer console
 
 - Portal gameplay (slot 07) is now ONE continuous UNEDITED cut of your recording with the original audio and game UI (what Epic asks for, 15–30 s). The polished montage (our music, grade, dissolves) becomes `gameplay_montage.mp4`, delivered only in `promo_pack/social/`.

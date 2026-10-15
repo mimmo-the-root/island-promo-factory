@@ -16,6 +16,7 @@ Log: last_run_all.log (overwritten each run). Timings: Projects/<map>/final/run_
 import argparse
 import json
 import os
+import stage_cache as sc
 import subprocess
 import sys
 import time
@@ -101,6 +102,7 @@ def main():
     ap.add_argument("--gameplay-look", choices=["cinematic", "hype", "off"], default="cinematic",
                     help="extra EDITED gameplay video (>=4 real moments, grade, zoom, speed, beat-synced cuts, our own music, original audio removed); "
                          "off = only the unedited portal cut. The portal gameplay.mp4 is always one real, unedited cut.")
+    ap.add_argument("--no-cache", action="store_true", help="redo every stage even when its inputs did not change (the per-stage cache is in final/stage_cache.json)")
     ap.add_argument("--social", action="store_true", help="ALSO make the optional social media content: the polished gameplay montage and the 9:16 videos with English promo subtitles (promo_pack/social/). Default: the kit only")
     ap.add_argument("--gameplay-scenes", type=int, default=3, metavar="N",
                     help="gameplay video (slot 07) = N (2 or 3) real scenes from the best moments, soft dissolves, our music instead of the original audio "
@@ -300,11 +302,32 @@ def main():
             print("\n--- %s: skipped (%s)" % (name, skip))
             timings.append({"stage": name, "seconds": 0.0, "status": "skipped: " + skip})
             continue
+        key = None
+        if name in sc.STAGES:       # per-stage cache: redo only when something upstream changed
+            force = a.no_cache or a.redo_all or (name == "images" and a.redo_portrait) or (name == "trailer" and a.redo_video)
+            extra = "qwen=%s conform=%s" % (not a.no_qwen, a.conform) if name == "images" else \
+                "secs=%s look=%s" % (os.environ.get("PROMO_TRAILER_SECONDS", ""), a.gameplay_look) if name == "trailer" else ""
+            try:
+                key = sc.stage_key(proj, name, extra)
+            except Exception as e:
+                print("(stage cache: %s not checked: %s)" % (name, e))
+            if key and not force and sc.hit(proj, name, key):
+                note = "unchanged since the last run (stage cache; --no-cache redoes it)"
+                print("\n--- %s: skipped (%s)" % (name, note))
+                status["stages"][idx].update(state="skipped", note=note)
+                save()
+                timings.append({"stage": name, "seconds": 0.0, "status": "skipped: " + note})
+                continue
         print("\n--- %s ..." % name)
         t0 = time.time()
         status["stages"][idx].update(state="running", t0=t0)
         save()
         rc = run(cmd, env)
+        if rc == 0 and key:
+            try:
+                sc.store(proj, name, sc.stage_key(proj, name, extra))      # key AFTER the run: a stage that touches its own inputs still hits next time
+            except OSError:
+                pass
         dt = time.time() - t0
         status["stages"][idx].update(state="done" if rc == 0 else "failed", seconds=round(dt, 1))
         save()
