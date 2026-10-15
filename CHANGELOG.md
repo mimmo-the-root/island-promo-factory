@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.21 — Vertical social videos with English promo subtitles
+
+- New `scripts/social_video.py` (last stage of `run_all`): 9:16 1080x1920 videos for TikTok, Reels and Shorts in `promo_pack/social/` (not for the Creator Portal), made from the finished trailer: blurred full-screen background, sharp clip below the top safe area, burned-in English subtitles (hook, selling points, call to action with the island code) in the middle band, clear of the app's bottom bar and right-hand buttons. 15–30 s, BT.709 tagged, cuts snap to the music's beats.
+- Texts live in `Projects/<map>/social.json` (variants A/B). Without it two neutral DRAFT variants are written from `config.json`; the `social-copywriter` agent can improve them and you approve them. A `.srt` and `captions.txt` (description + hashtags per platform) come with each video. A broken encode never replaces a good file.
+
 ## v1.1.20 — Cheap agents, token rules, console and start-up messages
 
 - Seven agents in `.claude/agents/` (synced with the kit): promo-intake, promo-runner, epic-compliance, social-copywriter, release-manager on Haiku; art-director and kit-auditor on Sonnet. None uses Opus.

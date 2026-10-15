@@ -10,6 +10,7 @@ Stages (each is a separate script, so any of them can also be run alone):
   4 trailer       trailer_builder.py
   5 promo pack    promo_pack.py         validates and collects everything for the Creator Portal
   6 lightbox      lightbox.py           the numbered preview board of the pack
+  7 social        social_video.py       9:16 videos with English promo subtitles in promo_pack/social/ (not for the portal)
 Log: last_run_all.log (overwritten each run). Timings: Projects/<map>/final/run_timings.json.
 """
 import argparse
@@ -228,10 +229,11 @@ def main():
     stages.append(("trailer", [py, str(SCRIPTS / "trailer_builder.py")], None))
     stages.append(("promo pack", [py, str(SCRIPTS / "promo_pack.py")], None))
     stages.append(("lightbox", [py, str(SCRIPTS / "lightbox.py")], None))
+    stages.append(("social", None if a.skip_video else [py, str(SCRIPTS / "social_video.py")], "--skip-video" if a.skip_video else None))   # last: an extra, never blocks the pack
 
     # expected duration per stage: last successful run of the same kind, else a rough default
     defaults = {"images": 30 if (a.no_qwen or a.conform) else 300, "video analyse": 25, "video cut": 30, "music": 4,
-                "trailer": 50, "promo pack": 10, "lightbox": 4}
+                "trailer": 50, "promo pack": 10, "lightbox": 4, "social": 25}
     if music_stage[1] is not None:
         try:
             import music_ai

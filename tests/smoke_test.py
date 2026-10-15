@@ -135,6 +135,15 @@ def main():
             print(out[-2500:])
         rc, out = run(py, ["scripts/video_validate.py", str(proj / "final" / "trailer.mp4"), "--kind", "trailer"], env, root)
         check(rc == 0, "trailer passes video_validate")
+        rc, out = run(py, ["scripts/social_video.py", "--only", "A"], env, root, timeout=300)
+        sv = proj / "promo_pack" / "social" / "social_A_1080x1920.mp4"
+        check(rc == 0 and sv.exists(), "social_video makes the 9:16 video (1080x1920, 15-30 s, BT.709, island code in the CTA)")
+        if rc != 0:
+            print(out[-1500:])
+        check(sv.with_suffix(".srt").exists() and (proj / "promo_pack" / "social" / "captions.txt").exists() and (proj / "social.json").exists(),
+              "social: .srt, captions.txt and social.json (draft) are written")
+        check("--only" in (root / "scripts" / "social_video.py").read_text(encoding="utf-8") and '"social"' in (root / "scripts" / "run_all.py").read_text(encoding="utf-8"),
+              "run_all has the social stage")
         mov = tmp / "trailer_prores.mov"
         rc, out = run(py, ["-c", "import sys; sys.path.insert(0, 'scripts'); import promo_pack as pk, video_tools as vt; "
                            "r = pk.make_prores(sys.argv[1], __import__('pathlib').Path(sys.argv[2]), vt.find_tool('ffmpeg', 'FFMPEG_PATH'), vt.find_tool('ffprobe', 'FFPROBE_PATH')); "
